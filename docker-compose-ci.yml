@@ -1,0 +1,23 @@
+version: "3.6"
+
+services:
+  pulsar:
+    image: apachepulsar/pulsar
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_ADMIN_ENABLE_SERVER: 'false'
+    ports:
+      - 26650:6650
+      - 28080:8080
+    command:
+      - bin/pulsar
+      - standalone
+  manager:
+    image: apachepulsar/pulsar-manager
+    environment:
+      SPRING_CONFIGURATION_FILE: /pulsar-manager/pulsar-manager/application.properties
+    ports:
+      - 9527:9527
+      - 7750:7750
+    links:
+      - pulsar
