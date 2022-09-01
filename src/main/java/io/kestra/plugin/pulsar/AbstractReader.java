@@ -51,8 +51,6 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
         try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tempFile))) {
             do {
                 for (Message<byte[]> message : supplier.get()) {
-                    System.out.println("Message received: " + new String(message.getData()));
-
                     // data to write
                     Map<Object, Object> map = new HashMap<>();
                     map.put("key", message.getKey());
