@@ -13,6 +13,8 @@ import lombok.experimental.SuperBuilder;
 public abstract class AbstractPulsarConnection extends Task implements PulsarConnectionInterface {
     private String uri;
 
+    private String authenticationToken;
+
     private TlsOptions tlsOptions;
 
     @Value

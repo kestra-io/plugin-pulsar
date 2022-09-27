@@ -20,6 +20,14 @@ public interface PulsarConnectionInterface {
     String getUri();
 
     @Schema(
+        title = "Authentication Token",
+        description = "Authentication Token that can be necessary with some providers such as Clever Cloud!"
+
+    )
+    @PluginProperty(dynamic = true)
+    String getAuthenticationToken();
+
+    @Schema(
         title = "TLS Authentication",
         description = "You need to use \"pulsar+ssl://\" in serviceUrl to enable TLS support."
 
