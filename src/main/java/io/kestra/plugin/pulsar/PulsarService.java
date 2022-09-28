@@ -21,9 +21,11 @@ public abstract class PulsarService {
     public static PulsarClient client(PulsarConnectionInterface pulsarConnectionInterface, RunContext runContext) throws IOException, IllegalVariableEvaluationException {
         ClientBuilder builder = PulsarClient.builder()
             .serviceUrl(runContext.render(pulsarConnectionInterface.getUri()));
-	if (pulsarConnectionInterface.getAuthenticationToken() != null) {
-	    builder.authentication(AuthenticationFactory.token(pulsarConnectionInterface.getAuthenticationToken()));
-	}
+
+        if (pulsarConnectionInterface.getAuthenticationToken() != null) {
+            builder.authentication(AuthenticationFactory.token(runContext.render(pulsarConnectionInterface.getAuthenticationToken())));
+        }
+
         if (pulsarConnectionInterface.getTlsOptions() != null) {
             Map<String, String> authParams = new HashMap<>();
 
