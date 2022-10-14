@@ -22,6 +22,10 @@ public abstract class PulsarService {
         ClientBuilder builder = PulsarClient.builder()
             .serviceUrl(runContext.render(pulsarConnectionInterface.getUri()));
 
+        if (pulsarConnectionInterface.getAuthenticationToken() != null) {
+            builder.authentication(AuthenticationFactory.token(runContext.render(pulsarConnectionInterface.getAuthenticationToken())));
+        }
+
         if (pulsarConnectionInterface.getTlsOptions() != null) {
             Map<String, String> authParams = new HashMap<>();
 

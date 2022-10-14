@@ -50,6 +50,8 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
 
     private String uri;
 
+    private String authenticationToken;
+
     private AbstractPulsarConnection.TlsOptions tlsOptions;
 
     private Object topic;
@@ -87,6 +89,7 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             .id(this.id)
             .type(Consume.class.getName())
             .uri(this.uri)
+            .authenticationToken(this.authenticationToken)
             .tlsOptions(this.tlsOptions)
             .topic(this.topic)
             .deserializer(this.deserializer)
