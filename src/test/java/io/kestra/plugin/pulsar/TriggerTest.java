@@ -78,7 +78,6 @@ class TriggerTest {
                 .type(Produce.class.getName())
                 .uri("pulsar://localhost:26650")
                 .serializer(SerdeType.JSON)
-                .authenticationToken("tete")
                 .topic("tu_trigger")
                 .from(List.of(
                     ImmutableMap.builder()
