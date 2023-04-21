@@ -111,7 +111,8 @@ nexusPublishing {
 jar {
     manifest {
         attributes(
-                "X-Kestra-Title": project.name,
+                "X-Kestra-Name": project.name,
+                "X-Kestra-Title": "Apache Pulsar",
                 "X-Kestra-Group": project.group + ".pulsar",
                 "X-Kestra-Description": project.description,
                 "X-Kestra-Version": project.version
