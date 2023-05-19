@@ -124,7 +124,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
             "* `Exclusive`: Require exclusive access for producer. Fail immediately if there's already a producer connected.\n" +
             "* `WaitForExclusive`: Producer creation is pending until it can acquire exclusive access"
     )
-    @PluginProperty(dynamic = false)
+    @PluginProperty
     private ProducerAccessMode accessMode;
 
     @io.swagger.v3.oas.annotations.media.Schema(
@@ -142,7 +142,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
             "* `ZSTD` Compress with Zstandard codec. Since Pulsar 2.3.\n" +
             "* `SNAPPY` Compress with Snappy codec. Since Pulsar 2.4."
     )
-    @PluginProperty(dynamic = false)
+    @PluginProperty
     private CompressionType compressionType;
 
     @SuppressWarnings("unchecked")
@@ -232,33 +232,34 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     @SuppressWarnings("unchecked")
     private CompletableFuture<MessageId> produceMessage(Producer<byte[]> producer, RunContext runContext, Map<String, Object> map) throws Exception {
         TypedMessageBuilder<byte[]> message = producer.newMessage();
+        Map<String, Object> renderedMap = runContext.render(map);
 
-        if (map.containsKey("key")) {
-            message.key((String) map.get("key"));
+        if (renderedMap.containsKey("key")) {
+            message.key((String) renderedMap.get("key"));
         }
 
-        if (map.containsKey("properties")) {
-            message.properties((Map<String, String>) map.get("properties"));
+        if (renderedMap.containsKey("properties")) {
+            message.properties((Map<String, String>) renderedMap.get("properties"));
         }
 
-        if (map.containsKey("value")) {
-            message.value(this.serializer.serialize(map.get("value")));
+        if (renderedMap.containsKey("value")) {
+            message.value(this.serializer.serialize(renderedMap.get("value")));
         }
 
-        if (map.containsKey("eventTime")) {
-            message.eventTime(processTimestamp(map.get("eventTime")));
+        if (renderedMap.containsKey("eventTime")) {
+            message.eventTime(processTimestamp(renderedMap.get("eventTime")));
         }
 
-        if (map.containsKey("deliverAfter")) {
-            message.deliverAfter(processTimestamp(map.get("deliverAfter")), TimeUnit.MILLISECONDS);
+        if (renderedMap.containsKey("deliverAfter")) {
+            message.deliverAfter(processTimestamp(renderedMap.get("deliverAfter")), TimeUnit.MILLISECONDS);
         }
 
-        if (map.containsKey("deliverAt")) {
-            message.deliverAt(processTimestamp(map.get("deliverAt")));
+        if (renderedMap.containsKey("deliverAt")) {
+            message.deliverAt(processTimestamp(renderedMap.get("deliverAt")));
         }
 
-        if (map.containsKey("sequenceId")) {
-            message.sequenceId((long) map.get("sequenceId"));
+        if (renderedMap.containsKey("sequenceId")) {
+            message.sequenceId((long) renderedMap.get("sequenceId"));
         }
 
         return message.sendAsync();
