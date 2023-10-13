@@ -47,7 +47,7 @@ public class PulsarTest {
             );
         }
 
-        return storageInterface.put(URI.create("/" + IdUtils.create() + ".ion"), new FileInputStream(tempFile));
+        return storageInterface.put(null, URI.create("/" + IdUtils.create() + ".ion"), new FileInputStream(tempFile));
     }
 
     @SuppressWarnings("unchecked")
@@ -77,7 +77,7 @@ public class PulsarTest {
         Consume.Output consumeOutput = consume.run(runContext);
         assertThat(consumeOutput.getMessagesCount(), is(50));
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(consumeOutput.getUri())));
+        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(null, consumeOutput.getUri())));
         List<Map<String, Object>> result = new ArrayList<>();
         FileSerde.reader(inputStream, r -> result.add((Map<String, Object>) r));
 
@@ -114,7 +114,7 @@ public class PulsarTest {
         Reader.Output consumeOutput = reader.run(runContext);
         assertThat(consumeOutput.getMessagesCount(), is(50));
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(consumeOutput.getUri())));
+        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(null, consumeOutput.getUri())));
         List<Map<String, Object>> result = new ArrayList<>();
         FileSerde.reader(inputStream, r -> result.add((Map<String, Object>) r));
 
