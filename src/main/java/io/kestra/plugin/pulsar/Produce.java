@@ -7,8 +7,6 @@ import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.FileSerde;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.*;
@@ -27,6 +25,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import jakarta.validation.constraints.NotNull;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
@@ -186,25 +186,25 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
                 Integer count = 1;
 
                 if (this.from instanceof String || this.from instanceof List) {
-                    Flowable<Object> flowable;
-                    Flowable<Integer> resultFlowable;
+                    Flux<Object> flowable;
+                    Flux<Integer> resultFlowable;
                     if (this.from instanceof String) {
                         URI from = new URI(runContext.render((String) this.from));
                         try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.uriToInputStream(from)))) {
-                            flowable = Flowable.create(FileSerde.reader(inputStream), BackpressureStrategy.BUFFER);
+                            flowable = Flux.create(FileSerde.reader(inputStream), FluxSink.OverflowStrategy.BUFFER);
                             resultFlowable = this.buildFlowable(flowable, runContext, producer);
 
                             count = resultFlowable
                                 .reduce(Integer::sum)
-                                .blockingGet();
+                                .block();
                         }
                     } else {
-                        flowable = Flowable.fromArray(((List<Object>) this.from).toArray());
+                        flowable = Flux.fromArray(((List<Object>) this.from).toArray());
                         resultFlowable = this.buildFlowable(flowable, runContext, producer);
 
                         count = resultFlowable
                             .reduce(Integer::sum)
-                            .blockingGet();
+                            .block();
                     }
                 } else {
                     this.produceMessage(producer, runContext, (Map<String, Object>) this.from);
@@ -222,12 +222,12 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     }
 
     @SuppressWarnings("unchecked")
-    private Flowable<Integer> buildFlowable(Flowable<Object> flowable, RunContext runContext, Producer<byte[]> producer) {
+    private Flux<Integer> buildFlowable(Flux<Object> flowable, RunContext runContext, Producer<byte[]> producer) throws Exception {
         return flowable
-            .map(row -> {
+            .map(throwFunction(row -> {
                 this.produceMessage(producer, runContext, (Map<String, Object>) row);
                 return 1;
-            });
+            }));
     }
 
     @SuppressWarnings("unchecked")
