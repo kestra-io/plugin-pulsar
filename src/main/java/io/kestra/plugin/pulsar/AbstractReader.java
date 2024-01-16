@@ -116,12 +116,12 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "Number of message consumed"
+            title = "Number of messages consumed."
         )
         private final Integer messagesCount;
 
         @Schema(
-            title = "URI of a kestra internal storage file"
+            title = "URI of a Kestra internal storage file containing the consumed messages."
         )
         private URI uri;
     }

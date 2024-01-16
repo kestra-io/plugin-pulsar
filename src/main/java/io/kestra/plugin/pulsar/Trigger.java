@@ -29,17 +29,17 @@ import java.util.Optional;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Wait for messages on Pulsar topics"
+    title = "Wait for messages from a Pulsar topic."
 )
 @Plugin(
     examples = {
         @Example(
             code = {
-                "interval: PT10S",
-                "topic: tu_trigger",
+                "interval: PT30S",
+                "topic: kestra_trigger",
                 "uri: pulsar://localhost:26650",
                 "deserializer: JSON",
-                "subscriptionName: tu_trigger_sub",
+                "subscriptionName: kestra_trigger_sub",
             }
         )
     }

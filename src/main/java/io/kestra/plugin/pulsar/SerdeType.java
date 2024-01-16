@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 @io.swagger.v3.oas.annotations.media.Schema(
-    title = "Serializer / Deserializer used for the value"
+    title = "Serializer / Deserializer used for the value."
 )
 public enum SerdeType {
     STRING,

@@ -36,12 +36,12 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @io.swagger.v3.oas.annotations.media.Schema(
-    title = "Produce message in a Pulsar topic"
+    title = "Produce message to a Pulsar topic."
 )
 @Plugin(
     examples = {
         @Example(
-            title = "Read a csv, transform it to right format & produce it to Pulsar",
+            title = "Read a CSV file, transform it to the right format, and publish it to Pulsar topic.",
             full = true,
             code = {
                 "id: produce",
@@ -82,23 +82,24 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 )
 public class Produce extends AbstractPulsarConnection implements RunnableTask<Produce.Output> {
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Pulsar topic where to send message"
+        title = "Pulsar topic to send a message to."
     )
     @NotNull
     @PluginProperty(dynamic = true)
     private String topic;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Source of message send",
-        description = "Can be an internal storage uri, a map or a list." +
-            "with the following format: key, value, partition, timestamp, headers"
+        title = "Source of the sent message.",
+        description = "Can be a Kestra internal storage URI, a map or a list " +
+            "in the following format: `key`, `value`, `eventTime`, `properties`, " +
+            "`deliverAt`, `deliverAfter` and `sequenceId`."
     )
     @NotNull
     @PluginProperty(dynamic = true)
     private Object from;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Serializer used for the value"
+        title = "Serializer used for the value."
     )
     @NotNull
     @PluginProperty(dynamic = true)
@@ -118,11 +119,11 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     private Map<String, String> producerProperties;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Configure the type of access mode that the producer requires on the topic",
+        title = "Configure the type of access mode that the producer requires on the topic.",
         description = "Possible values are:\n" +
-            "* `Shared`: By default multiple producers can publish on a topic\n" +
+            "* `Shared`: By default, multiple producers can publish to a topic.\n" +
             "* `Exclusive`: Require exclusive access for producer. Fail immediately if there's already a producer connected.\n" +
-            "* `WaitForExclusive`: Producer creation is pending until it can acquire exclusive access"
+            "* `WaitForExclusive`: Producer creation is pending until it can acquire exclusive access."
     )
     @PluginProperty
     private ProducerAccessMode accessMode;
@@ -136,9 +137,9 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     @io.swagger.v3.oas.annotations.media.Schema(
         title = "Set the compression type for the producer.",
         description = "By default, message payloads are not compressed. Supported compression types are:\n" +
-            "* `NONE`: No compression (Default)\n" +
-            "* `LZ4`: Compress with LZ4 algorithm. Faster but lower compression than ZLib\n" +
-            "* `ZLIB`: Standard ZLib compression\n" +
+            "* `NONE`: No compression (Default).\n" +
+            "* `LZ4`: Compress with LZ4 algorithm. Faster but lower compression than ZLib.\n" +
+            "* `ZLIB`: Standard ZLib compression.\n" +
             "* `ZSTD` Compress with Zstandard codec. Since Pulsar 2.3.\n" +
             "* `SNAPPY` Compress with Snappy codec. Since Pulsar 2.4."
     )
@@ -301,7 +302,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @io.swagger.v3.oas.annotations.media.Schema(
-            title = "Number of message produced"
+            title = "Number of messages produced."
         )
         private final Integer messagesCount;
     }

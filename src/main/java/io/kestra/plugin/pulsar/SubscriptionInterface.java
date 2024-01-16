@@ -10,22 +10,22 @@ import javax.validation.constraints.NotNull;
 
 public interface SubscriptionInterface {
     @Schema(
-        title = "The subscription name",
-        description = "Using subscription name, we will fetch only records not already consumed"
+        title = "The subscription name.",
+        description = "Using subscription name, we will fetch only records that haven't been consumed yet."
     )
     @PluginProperty(dynamic = true)
     @NotNull
     String getSubscriptionName();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Add all the properties in the provided map to the consumer."
+        title = "The position of a subscription to the topic."
     )
     @PluginProperty(dynamic = false)
     @NotNull
     SubscriptionInitialPosition getInitialPosition();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Add all the properties in the provided map to the consumer."
+        title = "The subscription type."
     )
     @PluginProperty(dynamic = false)
     @NotNull
@@ -38,13 +38,13 @@ public interface SubscriptionInterface {
     Map<String, String> getConsumerProperties();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Add public encryption key, used by producer to decrypt the data key."
+        title = "Add a public encryption key to the producer/consumer."
     )
     @PluginProperty(dynamic = true)
     String getEncryptionKey();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Set the consumer name."
+        title = "The consumer name."
     )
     @PluginProperty(dynamic = true)
     String getConsumerName();
