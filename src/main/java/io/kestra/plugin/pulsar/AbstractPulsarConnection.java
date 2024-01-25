@@ -20,22 +20,22 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
     @Value
     public static class TlsOptions {
         @Schema(
-            title = "The client certificate",
-            description = "Must be a pem file as base64."
+            title = "The client certificate.",
+            description = "Must be a base64-encoded pem file."
 
         )
         String cert;
 
         @Schema(
-            title = "The key certificate",
-            description = "Must be a pem file as base64."
+            title = "The key certificate.",
+            description = "Must be a base64-encoded pem file."
 
         )
         String key;
 
         @Schema(
-            title = "The ca certificate",
-            description = "Must be a pem file as base64."
+            title = "The ca certificate.",
+            description = "Must be a base64-encoded pem file."
 
         )
         String ca;
