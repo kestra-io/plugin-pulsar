@@ -48,7 +48,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                 "namespace: io.kestra.tests",
                 "inputs:",
                 "  - type: FILE",
-                "    name: file",
+                "    id: file",
                 "",
                 "tasks:",
                 "  - id: csvReader",
