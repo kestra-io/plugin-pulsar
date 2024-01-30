@@ -1,7 +1,5 @@
 package io.kestra.plugin.pulsar;
 
-import static io.kestra.core.utils.Rethrow.throwFunction;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -21,8 +19,10 @@ import org.apache.pulsar.client.api.*;
 import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.FileSerde;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
+
+import static io.kestra.core.utils.Rethrow.throwFunction;
 
 public abstract class BaseProducer<T> {
 
@@ -88,25 +88,25 @@ public abstract class BaseProducer<T> {
     Integer count = 1;
 
     if (from instanceof String || from instanceof List) {
-        Flowable<Object> flowable;
-        Flowable<Integer> resultFlowable;
+        Flux<Object> flowable;
+        Flux<Integer> resultFlowable;
         if (from instanceof String) {
             URI uri = new URI(runContext.render((String) from));
             try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.uriToInputStream(uri)))) {
-                flowable = Flowable.create(FileSerde.reader(inputStream), BackpressureStrategy.BUFFER);
+                flowable = Flux.create(FileSerde.reader(inputStream), FluxSink.OverflowStrategy.BUFFER);
                 resultFlowable = this.buildFlowable(flowable);
 
                 count = resultFlowable
                     .reduce(Integer::sum)
-                    .blockingGet();
+                    .block();
             }
         } else {
-            flowable = Flowable.fromArray(((List<Object>) from).toArray());
+            flowable = Flux.fromArray(((List<Object>) from).toArray());
             resultFlowable = this.buildFlowable(flowable);
 
             count = resultFlowable
                 .reduce(Integer::sum)
-                .blockingGet();
+                .block();
         }
     } else {
         this.produceMessage((Map<String, Object>) from);
@@ -120,12 +120,12 @@ public abstract class BaseProducer<T> {
   }
 
   @SuppressWarnings("unchecked")
-  private Flowable<Integer> buildFlowable(Flowable<Object> flowable) {
+  private Flux<Integer> buildFlowable(Flux<Object> flowable) throws Exception {
       return flowable
-          .map(row -> {
+          .map(throwFunction(row -> {
               this.produceMessage((Map<String, Object>) row);
               return 1;
-          });
+          }));
   }
 
   @SuppressWarnings("unchecked")

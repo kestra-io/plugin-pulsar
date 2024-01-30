@@ -9,6 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.*;
+import org.apache.pulsar.client.api.schema.GenericRecord;
+import org.apache.pulsar.client.api.schema.SchemaDefinition;
+import org.apache.pulsar.common.schema.SchemaInfo;
 
 import java.util.AbstractMap;
 import java.util.Map;
@@ -55,12 +58,19 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
     @Override
     public AbstractReader.Output run(RunContext runContext) throws Exception {
         try (PulsarClient client = PulsarService.client(this, runContext)) {
-            ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
+            System.out.println("run_1");
+            SchemaDefinition<GenericRecord> schemaDef = SchemaDefinition
+              .<GenericRecord>builder()
+              .withJsonDef("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}")
+              .build();
+            System.out.println("run_2");
+            ConsumerBuilder<GenericRecord> consumerBuilder = client.newConsumer(org.apache.pulsar.client.api.Schema.generic(org.apache.pulsar.client.api.Schema.AVRO(schemaDef).getSchemaInfo()))
+            // ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
                 .topics(this.topics(runContext))
                 .subscriptionName(runContext.render(this.subscriptionName))
                 .subscriptionInitialPosition(this.initialPosition)
                 .subscriptionType(this.subscriptionType);
-
+            System.out.println("run_3");
             if (this.consumerName != null) {
                 consumerBuilder.consumerName(runContext.render(this.consumerName));
             }
@@ -81,12 +91,13 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
                 consumerBuilder.defaultCryptoKeyReader(runContext.render(this.encryptionKey));
             }
 
-            try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
+            try (Consumer<GenericRecord> consumer = consumerBuilder.subscribe()) {
+                System.out.println("run_4");
                 return this.read(
                     runContext,
                     Rethrow.throwSupplier(() -> {
                         try {
-                            Messages<byte[]> messages = consumer.batchReceive();
+                            Messages<GenericRecord> messages = consumer.batchReceive();
 
                             return StreamSupport
                                 .stream(messages.spliterator(), false)
@@ -97,6 +108,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
                                 }))
                                 .collect(Collectors.toList());
                         } catch (Throwable e) {
+                            System.out.println(e);
                             throw new Exception(e);
                         }
                     })

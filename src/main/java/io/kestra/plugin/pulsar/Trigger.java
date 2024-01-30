@@ -84,7 +84,6 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         RunContext runContext = conditionContext.getRunContext();
         Logger logger = runContext.logger();
-
         Consume task = Consume.builder()
             .id(this.id)
             .type(Consume.class.getName())
@@ -103,16 +102,18 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             .encryptionKey(this.encryptionKey)
             .consumerName(this.consumerName)
             .build();
+        System.out.println("Pre run");
         Consume.Output run = task.run(runContext);
+        System.out.println("Post run");
 
         if (logger.isDebugEnabled()) {
             logger.debug("Found '{}' messages from '{}'", run.getMessagesCount(), task.topics(runContext));
         }
+        System.out.println(String.format("Found '%d' messages", run.getMessagesCount()));
 
         if (run.getMessagesCount() == 0) {
             return Optional.empty();
         }
-
         ExecutionTrigger executionTrigger = ExecutionTrigger.of(
             this,
             run
