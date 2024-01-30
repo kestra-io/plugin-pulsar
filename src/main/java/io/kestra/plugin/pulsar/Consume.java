@@ -59,13 +59,13 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
     public AbstractReader.Output run(RunContext runContext) throws Exception {
         try (PulsarClient client = PulsarService.client(this, runContext)) {
             System.out.println("run_1");
-            SchemaDefinition<GenericRecord> schemaDef = SchemaDefinition
-              .<GenericRecord>builder()
-              .withJsonDef("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}")
-              .build();
+            // SchemaDefinition<GenericRecord> schemaDef = SchemaDefinition
+            //   .<GenericRecord>builder()
+            //   .withJsonDef("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}")
+            //   .build();
             System.out.println("run_2");
-            ConsumerBuilder<GenericRecord> consumerBuilder = client.newConsumer(org.apache.pulsar.client.api.Schema.generic(org.apache.pulsar.client.api.Schema.AVRO(schemaDef).getSchemaInfo()))
-            // ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
+            // ConsumerBuilder<GenericRecord> consumerBuilder = client.newConsumer(org.apache.pulsar.client.api.Schema.generic(org.apache.pulsar.client.api.Schema.AVRO(schemaDef).getSchemaInfo()))
+            ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
                 .topics(this.topics(runContext))
                 .subscriptionName(runContext.render(this.subscriptionName))
                 .subscriptionInitialPosition(this.initialPosition)
@@ -91,13 +91,13 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
                 consumerBuilder.defaultCryptoKeyReader(runContext.render(this.encryptionKey));
             }
 
-            try (Consumer<GenericRecord> consumer = consumerBuilder.subscribe()) {
+            try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
                 System.out.println("run_4");
                 return this.read(
                     runContext,
                     Rethrow.throwSupplier(() -> {
                         try {
-                            Messages<GenericRecord> messages = consumer.batchReceive();
+                            Messages<byte[]> messages = consumer.batchReceive();
 
                             return StreamSupport
                                 .stream(messages.spliterator(), false)

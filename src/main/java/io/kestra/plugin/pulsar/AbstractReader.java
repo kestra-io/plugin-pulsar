@@ -17,6 +17,8 @@ import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumWriter;
 // import org.apache.pulsar.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.pulsar.shade.org.apache.avro.io.DatumReader;
 import org.apache.pulsar.shade.org.apache.avro.io.DatumWriter;
+import org.apache.pulsar.shade.org.apache.avro.io.Decoder;
+import org.apache.pulsar.shade.org.apache.avro.io.DecoderFactory;
 import org.apache.pulsar.shade.org.apache.avro.io.EncoderFactory;
 import org.apache.pulsar.shade.org.apache.avro.io.JsonEncoder;
 
@@ -58,7 +60,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     private Duration maxDuration;
 
     @SuppressWarnings("unchecked")
-    public Output read(RunContext runContext, Supplier<List<Message<GenericRecord>>> supplier) throws Exception {
+    public Output read(RunContext runContext, Supplier<List<Message<byte[]>>> supplier) throws Exception {
       System.out.println("read_1");  
       File tempFile = runContext.tempFile(".ion").toFile();
         Map<String, Integer> count = new HashMap<>();
@@ -69,7 +71,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
         try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tempFile))) {
             System.out.println("read_2");
             do {
-                for (Message<GenericRecord> message : supplier.get()) {
+                for (Message<byte[]> message : supplier.get()) {
                     System.out.println("read_3");
                     // data to write
                     // System.out.println(message.toString());
@@ -139,22 +141,23 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
         }
     }
 
-    private String avroToJson(GenericRecord avroObj) throws IOException {
-      // // byte to datum
-      // DatumReader<Object> datumReader = new GenericDatumReader<>(schema);
-      // Decoder deco
+    private String avroToJson(byte[] avroBinary) throws IOException {
       SchemaDefinition<GenericRecord> schemaDef = SchemaDefinition
-        .<GenericRecord>builder()
-        .withJsonDef("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}")
-        .build();
+      .<GenericRecord>builder()
+      .withJsonDef("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}")
+      .build();
       org.apache.pulsar.client.api.Schema<GenericRecord> schema = org.apache.pulsar.client.api.Schema.AVRO(schemaDef);
       org.apache.pulsar.shade.org.apache.avro.Schema schema2 = org.apache.pulsar.shade.org.apache.avro.Schema.parse("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}");
+      // byte to datum
+      DatumReader<Object> datumReader = new GenericDatumReader<>(schema2);
+      Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
+      Object avroObj = datumReader.read(null, decoder);
 
       String json = null;
       try (ByteArrayOutputStream boas = new ByteArrayOutputStream()) {
         DatumWriter<Object> writer = new GenericDatumWriter<>(schema2);
         JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema2, boas, false);
-        writer.write(avroObj.getNativeObject(), encoder);
+        writer.write(avroObj, encoder);
         boas.flush();
         return new String(boas.toByteArray(), StandardCharsets.UTF_8);
       }

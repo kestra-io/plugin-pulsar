@@ -64,12 +64,13 @@ public class Reader extends AbstractReader {
     @Override
     public AbstractReader.Output run(RunContext runContext) throws Exception {
         try (PulsarClient client = PulsarService.client(this, runContext)) {
-          SchemaDefinition<GenericRecord> schemaDef = SchemaDefinition
-              .<GenericRecord>builder()
-              .withJsonDef("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}")
-              .build();
+          // SchemaDefinition<GenericRecord> schemaDef = SchemaDefinition
+          //     .<GenericRecord>builder()
+          //     .withJsonDef("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}")
+          //     .build();
 
-          org.apache.pulsar.client.api.ReaderBuilder<GenericRecord> readerBuilder = client.newReader(org.apache.pulsar.client.api.Schema.generic(org.apache.pulsar.client.api.Schema.AVRO(schemaDef).getSchemaInfo()))
+          // org.apache.pulsar.client.api.ReaderBuilder<GenericRecord> readerBuilder = client.newReader(org.apache.pulsar.client.api.Schema.generic(org.apache.pulsar.client.api.Schema.AVRO(schemaDef).getSchemaInfo()))
+          org.apache.pulsar.client.api.ReaderBuilder<byte[]> readerBuilder = client.newReader()
                 .topics(this.topics(runContext));
 
             if (this.since != null) {
@@ -80,11 +81,11 @@ public class Reader extends AbstractReader {
                 readerBuilder.startMessageId(MessageId.earliest);
             }
 
-            try (org.apache.pulsar.client.api.Reader<GenericRecord> reader = readerBuilder.create()) {
+            try (org.apache.pulsar.client.api.Reader<byte[]> reader = readerBuilder.create()) {
                 return this.read(
                     runContext,
                     Rethrow.throwSupplier(() -> {
-                        Message<GenericRecord> message = reader.readNext(this.getPollDuration().getNano(), TimeUnit.NANOSECONDS);
+                        Message<byte[]> message = reader.readNext(this.getPollDuration().getNano(), TimeUnit.NANOSECONDS);
 
                         if (message == null) {
                             return List.of();
