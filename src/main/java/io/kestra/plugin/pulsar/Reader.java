@@ -11,13 +11,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-
-import org.apache.pulsar.client.api.ConsumerBuilder;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.schema.GenericRecord;
-import org.apache.pulsar.client.api.schema.SchemaDefinition;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -64,13 +60,7 @@ public class Reader extends AbstractReader {
     @Override
     public AbstractReader.Output run(RunContext runContext) throws Exception {
         try (PulsarClient client = PulsarService.client(this, runContext)) {
-          // SchemaDefinition<GenericRecord> schemaDef = SchemaDefinition
-          //     .<GenericRecord>builder()
-          //     .withJsonDef("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}")
-          //     .build();
-
-          // org.apache.pulsar.client.api.ReaderBuilder<GenericRecord> readerBuilder = client.newReader(org.apache.pulsar.client.api.Schema.generic(org.apache.pulsar.client.api.Schema.AVRO(schemaDef).getSchemaInfo()))
-          org.apache.pulsar.client.api.ReaderBuilder<byte[]> readerBuilder = client.newReader()
+            org.apache.pulsar.client.api.ReaderBuilder<byte[]> readerBuilder = client.newReader()
                 .topics(this.topics(runContext));
 
             if (this.since != null) {

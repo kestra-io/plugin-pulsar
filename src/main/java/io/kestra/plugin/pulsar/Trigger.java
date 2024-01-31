@@ -2,6 +2,7 @@ package io.kestra.plugin.pulsar;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.executions.ExecutionTrigger;
@@ -13,6 +14,7 @@ import io.kestra.core.models.triggers.TriggerOutput;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.IdUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
@@ -80,10 +82,27 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
 
     private String consumerName;
 
+    @io.swagger.v3.oas.annotations.media.Schema(
+      title = "JSON strong of the topics schema",
+      description = "Required for connecting with topics using AVRO or JSON schemas"
+    )
+    @PluginProperty
+    private String schemaString;
+
+    @io.swagger.v3.oas.annotations.media.Schema(
+      title = "The topics schema type. If not AVRO or JSON, leave as byte",
+      description = "Required for connecting with topics using AVRO or JSON schemas"
+    )
+    @NotNull
+    @PluginProperty(dynamic = true)
+    @Builder.Default
+    private String schemaType = "byte";
+
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         RunContext runContext = conditionContext.getRunContext();
         Logger logger = runContext.logger();
+        
         Consume task = Consume.builder()
             .id(this.id)
             .type(Consume.class.getName())
@@ -101,15 +120,14 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             .consumerProperties(this.consumerProperties)
             .encryptionKey(this.encryptionKey)
             .consumerName(this.consumerName)
+            .schemaString(this.schemaString)
+            .schemaType(this.schemaType)
             .build();
-        System.out.println("Pre run");
         Consume.Output run = task.run(runContext);
-        System.out.println("Post run");
 
         if (logger.isDebugEnabled()) {
             logger.debug("Found '{}' messages from '{}'", run.getMessagesCount(), task.topics(runContext));
         }
-        System.out.println(String.format("Found '%d' messages", run.getMessagesCount()));
 
         if (run.getMessagesCount() == 0) {
             return Optional.empty();
@@ -131,3 +149,4 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
         return Optional.of(execution);
     }
 }
+
