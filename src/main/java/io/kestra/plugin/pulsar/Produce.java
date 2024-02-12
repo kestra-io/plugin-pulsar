@@ -32,7 +32,7 @@ import jakarta.validation.constraints.NotNull;
                 "namespace: io.kestra.tests",
                 "inputs:",
                 "  - type: FILE",
-                "    name: file",
+                "    id: file",
                 "",
                 "tasks:",
                 "  - id: csvReader",
