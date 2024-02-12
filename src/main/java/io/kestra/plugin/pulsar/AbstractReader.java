@@ -113,7 +113,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     }
 
     private String deserializeWithSchema(byte[] avroBinary) throws IOException {
-      Schema schema = Schema.parse("{\"type\": \"record\", \"name\": \"CentroidCollectionSchema\", \"fields\": [{\"name\": \"img_id\", \"type\": \"string\"}, {\"name\": \"centroids\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"CentroidSchema\", \"fields\": [{\"name\": \"centroid_y\", \"type\": \"int\"}, {\"name\": \"centroid_x\", \"type\": \"int\"}, {\"name\": \"centroid_id\", \"type\": \"string\"}, {\"name\": \"confidence\", \"type\": \"float\"}, {\"name\": \"classification\", \"type\": \"int\"}]}}}]}");
+      Schema schema = Schema.parse(this.schemaString);
       
       // byte to datum
       DatumReader<Object> datumReader = new GenericDatumReader<>(schema);
