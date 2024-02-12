@@ -41,96 +41,96 @@ import java.util.function.Supplier;
 @NoArgsConstructor
 public abstract class AbstractReader extends AbstractPulsarConnection implements ReadInterface, RunnableTask<AbstractReader.Output> {
     private Object topic;
-
+    
     @Builder.Default
     private SerdeType deserializer = SerdeType.STRING;
-
+    
     @Builder.Default
     private Duration pollDuration = Duration.ofSeconds(2);
-
+    
     private Integer maxRecords;
-
+    
     private Duration maxDuration;
-
+    
     public Output read(RunContext runContext, Supplier<List<Message<byte[]>>> supplier) throws Exception {
-      File tempFile = runContext.tempFile(".ion").toFile();
+        File tempFile = runContext.tempFile(".ion").toFile();
         Map<String, Integer> count = new HashMap<>();
         AtomicInteger total = new AtomicInteger();
         ZonedDateTime started = ZonedDateTime.now();
         ZonedDateTime lastPool = ZonedDateTime.now();
-
+        
         try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tempFile))) {
             do {
                 for (Message<byte[]> message : supplier.get()) {
                     boolean applySchema = this.schemaType != null;
                     if (applySchema && this.schemaString == null){ throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null"); }
-
+                    
                     Map<Object, Object> map = new HashMap<>();
                     map.put("key", message.getKey());
                     map.put("value", applySchema ? deserializeWithSchema(message.getValue()) : this.deserializer.deserialize(message.getValue()));
                     map.put("properties", message.getProperties());
                     map.put("topic", message.getTopicName());
                     if (message.getEventTime() != 0) {
-                      map.put("eventTime", Instant.ofEpochMilli(message.getEventTime()));
+                        map.put("eventTime", Instant.ofEpochMilli(message.getEventTime()));
                     }
                     map.put("messageId", message.getMessageId());
                     FileSerde.write(output, map);
-  
+                    
                     // update internal values
                     total.getAndIncrement();
                     count.compute(message.getTopicName(), (s, integer) -> integer == null ? 1 : integer + 1);
                     lastPool = ZonedDateTime.now();
-
+                    
                 } 
             } while (!this.ended(total, started, lastPool));
-
+            
             output.flush();
-
+            
             count
-                .forEach((s, integer) -> runContext.metric(Counter.of("records", integer, "topic", s)));
-
+            .forEach((s, integer) -> runContext.metric(Counter.of("records", integer, "topic", s)));
+            
             return Output.builder()
-                .messagesCount(count.values().stream().mapToInt(Integer::intValue).sum())
-                .uri(runContext.putTempFile(tempFile))
-                .build();
+            .messagesCount(count.values().stream().mapToInt(Integer::intValue).sum())
+            .uri(runContext.putTempFile(tempFile))
+            .build();
         }
     }
-
+    
     private String deserializeWithSchema(byte[] avroBinary) throws IOException {
-      Schema schema = Schema.parse(this.schemaString);
-      
-      // byte to datum
-      DatumReader<Object> datumReader = new GenericDatumReader<>(schema);
-      Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
-      Object avroObj = datumReader.read(null, decoder);
-
-      try (ByteArrayOutputStream boas = new ByteArrayOutputStream()) {
-        DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
-        JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, boas, false);
-        writer.write(avroObj, encoder);
-        encoder.flush();
-        boas.flush();
-        return new String(boas.toByteArray(), StandardCharsets.UTF_8);
-      }
+        Schema schema = Schema.parse(this.schemaString);
+        
+        // byte to datum
+        DatumReader<Object> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
+        Object avroObj = datumReader.read(null, decoder);
+        
+        try (ByteArrayOutputStream boas = new ByteArrayOutputStream()) {
+            DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
+            JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, boas, false);
+            writer.write(avroObj, encoder);
+            encoder.flush();
+            boas.flush();
+            return new String(boas.toByteArray(), StandardCharsets.UTF_8);
+        }
     }
-
+    
     @SuppressWarnings("RedundantIfStatement")
     private boolean ended(AtomicInteger count, ZonedDateTime start, ZonedDateTime lastPool) {
         if (this.maxRecords != null && count.get() > this.maxRecords) {
             return true;
         }
-
+        
         if (this.maxDuration != null && ZonedDateTime.now().toEpochSecond() > start.plus(this.maxDuration).toEpochSecond()) {
             return true;
         }
-
+        
         if (ZonedDateTime.now().toEpochSecond() > lastPool.plus(this.pollDuration).toEpochSecond()) {
             return true;
         }
-
+        
         return false;
     }
-
+    
     @SuppressWarnings("unchecked")
     List<String> topics(RunContext runContext) throws IllegalVariableEvaluationException {
         if (this.topic instanceof String) {
@@ -141,17 +141,17 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
             throw new IllegalArgumentException("Invalid topics with type '" + this.topic.getClass().getName() + "'");
         }
     }
-
+    
     @Builder
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @io.swagger.v3.oas.annotations.media.Schema(
-            title = "Number of messages consumed."
+        title = "Number of messages consumed."
         )
         private final Integer messagesCount;
-
+        
         @io.swagger.v3.oas.annotations.media.Schema(
-            title = "URI of a Kestra internal storage file containing the consumed messages."
+        title = "URI of a Kestra internal storage file containing the consumed messages."
         )
         private URI uri;
     }

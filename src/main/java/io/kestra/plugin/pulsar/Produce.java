@@ -137,11 +137,11 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
           switch (this.schemaType) {
             case AVRO:
             case JSON:
-              producer = new GenericProducer(runContext, client, this.schemaString, this.schemaType);
-              break;
+                producer = new GenericProducer(runContext, client, this.schemaString, this.schemaType);
+                break;
             default:
-              producer = new ByteProducer(runContext, client, this.serializer);
-              break;
+                producer = new ByteProducer(runContext, client, this.serializer);
+                break;
           }
   
           producer.constructProducer(this.topic, this.producerName, this.accessMode,this.encryptionKey, this.compressionType, this.producerProperties);
