@@ -6,7 +6,7 @@ import org.apache.pulsar.client.api.*;
 
 import io.kestra.core.runners.RunContext;
 
-public class ByteProducer extends BaseProducer<byte[]>{
+public class ByteProducer extends AbstractProducer<byte[]>{
 
   private SerdeType serializer;
 
@@ -16,12 +16,12 @@ public class ByteProducer extends BaseProducer<byte[]>{
   }
 
   @Override
-  protected ProducerBuilder<byte[]> GetProducerBuilder(PulsarClient client) {
+  protected ProducerBuilder<byte[]> getProducerBuilder(PulsarClient client) {
     return client.newProducer();
   }
 
   @Override
-  protected TypedMessageBuilder<byte[]> CreateMessageWithValue(Map<String, Object> renderedMap) throws Exception {
+  protected TypedMessageBuilder<byte[]> createMessageWithValue(Map<String, Object> renderedMap) throws Exception {
     try {
       this.producer = this.producerBuilder.create();
       TypedMessageBuilder<byte[]> message = this.producer.newMessage();

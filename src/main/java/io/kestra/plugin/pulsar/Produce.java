@@ -131,28 +131,27 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     private CompressionType compressionType;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-      title = "JSON strong of the topics schema",
-      description = "Required for connecting with topics using AVRO or JSON schemas"
+      title = "JSON string of the topic's schema",
+      description = "Required for connecting with topics with a defined schema and strict schema checking"
     )
-    @PluginProperty
+    @PluginProperty(dynamic = true)
     private String schemaString;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-      title = "The topics schema type. If not AVRO or JSON, leave as byte",
-      description = "Required for connecting with topics using AVRO or JSON schemas"
+      title = "The schema type of the topic",
+      description = "Can be one of either AVRO or JSON. Leave as null for topics without strict schema checking"
     )
-    @NotNull
     @PluginProperty(dynamic = true)
     @Builder.Default
-    private String schemaType = "byte";
+    private SchemaType schemaType = null;
 
     @Override
     public Output run(RunContext runContext) throws Exception {        
         try (PulsarClient client = PulsarService.client(this, runContext)) {
-          BaseProducer<?> producer;
-          switch (this.schemaType.toLowerCase()) {
-            case "avro":
-            case "json":
+          AbstractProducer<?> producer;
+          switch (this.schemaType) {
+            case AVRO:
+            case JSON:
               producer = new GenericProducer(runContext, client, this.schemaString, this.schemaType);
               break;
             default:
@@ -160,8 +159,8 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
               break;
           }
   
-          producer.ConstructProducer(this.topic, this.schemaType, this.producerName, this.accessMode,this.encryptionKey, this.compressionType, this.producerProperties);
-          int messageCount = producer.ProduceMessage(this.from);
+          producer.constructProducer(this.topic, this.producerName, this.accessMode,this.encryptionKey, this.compressionType, this.producerProperties);
+          int messageCount = producer.produceMessage(this.from);
 
           return Output.builder()
               .messagesCount(messageCount)

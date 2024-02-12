@@ -24,7 +24,7 @@ import reactor.core.publisher.FluxSink;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
-public abstract class BaseProducer<T> {
+public abstract class AbstractProducer<T> {
 
   ProducerBuilder<T> producerBuilder;
 
@@ -35,43 +35,42 @@ public abstract class BaseProducer<T> {
   RunContext runContext;
 
 
-  public BaseProducer(RunContext runContext, PulsarClient client) {
+  public AbstractProducer(RunContext runContext, PulsarClient client) {
     this.client = client;
     this.runContext = runContext;
   }
 
-  public void ConstructProducer(
+  public void constructProducer(
     String topic,
-    String schemaType,
     String producerName,
     ProducerAccessMode accessMode,
     String encryptionKey,
     CompressionType compressionType,
     Map<String, String> producerProperties ) throws Exception {
 
-    this.producerBuilder = this.GetProducerBuilder(this.client);
-    producerBuilder
+    this.producerBuilder = this.getProducerBuilder(this.client);
+    this.producerBuilder
         .topic(this.runContext.render(topic))
         .enableBatching(true);
 
     if (producerName != null) {
-        producerBuilder.producerName(this.runContext.render(producerName));
+        this.producerBuilder.producerName(this.runContext.render(producerName));
     }
 
     if (accessMode != null) {
-        producerBuilder.accessMode(accessMode);
+        this.producerBuilder.accessMode(accessMode);
     }
 
     if (encryptionKey != null) {
-        producerBuilder.addEncryptionKey(this.runContext.render(encryptionKey));
+        this.producerBuilder.addEncryptionKey(this.runContext.render(encryptionKey));
     }
 
     if (compressionType != null) {
-        producerBuilder.compressionType(compressionType);
+        this.producerBuilder.compressionType(compressionType);
     }
 
     if (producerProperties != null) {
-        producerBuilder.properties(producerProperties
+        this.producerBuilder.properties(producerProperties
             .entrySet()
             .stream()
             .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
@@ -84,7 +83,7 @@ public abstract class BaseProducer<T> {
   }
 
   @SuppressWarnings("unchecked")
-  public int ProduceMessage(Object from) throws Exception {
+  public int produceMessage(Object from) throws Exception {
     Integer count = 1;
 
     if (from instanceof String || from instanceof List) {
@@ -133,7 +132,7 @@ public abstract class BaseProducer<T> {
       // TypedMessageBuilder<?> message = producer.newMessage();
       Map<String, Object> renderedMap = this.runContext.render(map);
 
-      TypedMessageBuilder<?> message = this.CreateMessageWithValue(renderedMap);
+      TypedMessageBuilder<?> message = this.createMessageWithValue(renderedMap);
 
       if (renderedMap.containsKey("key")) {
           message.key((String) renderedMap.get("key"));
@@ -193,7 +192,7 @@ public abstract class BaseProducer<T> {
       throw new IllegalArgumentException("Invalid type of timestamp with type '" + timestamp.getClass() + "'");
   }
 
-  protected abstract ProducerBuilder<T> GetProducerBuilder(PulsarClient client);
+  protected abstract ProducerBuilder<T> getProducerBuilder(PulsarClient client);
 
-  protected abstract TypedMessageBuilder<T> CreateMessageWithValue(Map<String, Object> renderedMap) throws Exception;
+  protected abstract TypedMessageBuilder<T> createMessageWithValue(Map<String, Object> renderedMap) throws Exception;
 }
