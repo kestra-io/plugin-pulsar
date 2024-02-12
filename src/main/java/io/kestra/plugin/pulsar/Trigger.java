@@ -12,9 +12,7 @@ import io.kestra.core.models.triggers.PollingTriggerInterface;
 import io.kestra.core.models.triggers.TriggerContext;
 import io.kestra.core.models.triggers.TriggerOutput;
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.utils.IdUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
@@ -83,20 +81,19 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     private String consumerName;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-      title = "JSON strong of the topics schema",
-      description = "Required for connecting with topics using AVRO or JSON schemas"
+      title = "JSON string of the topic's schema",
+      description = "Required for connecting with topics with a defined schema and strict schema checking"
     )
-    @PluginProperty
-    private String schemaString;
+    @PluginProperty(dynamic = true)
+    protected String schemaString;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-      title = "The topics schema type. If not AVRO or JSON, leave as byte",
-      description = "Required for connecting with topics using AVRO or JSON schemas"
+      title = "The schema type of the topic",
+      description = "Can be one of either AVRO or JSON. Leave as null for topics without strict schema checking"
     )
-    @NotNull
     @PluginProperty(dynamic = true)
     @Builder.Default
-    private String schemaType = "byte";
+    protected SchemaType schemaType = null;
 
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {

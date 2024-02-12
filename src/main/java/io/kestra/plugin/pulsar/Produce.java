@@ -130,21 +130,6 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     @PluginProperty
     private CompressionType compressionType;
 
-    @io.swagger.v3.oas.annotations.media.Schema(
-      title = "JSON string of the topic's schema",
-      description = "Required for connecting with topics with a defined schema and strict schema checking"
-    )
-    @PluginProperty(dynamic = true)
-    private String schemaString;
-
-    @io.swagger.v3.oas.annotations.media.Schema(
-      title = "The schema type of the topic",
-      description = "Can be one of either AVRO or JSON. Leave as null for topics without strict schema checking"
-    )
-    @PluginProperty(dynamic = true)
-    @Builder.Default
-    private SchemaType schemaType = null;
-
     @Override
     public Output run(RunContext runContext) throws Exception {        
         try (PulsarClient client = PulsarService.client(this, runContext)) {

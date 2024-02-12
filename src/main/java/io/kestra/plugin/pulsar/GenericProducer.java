@@ -27,7 +27,7 @@ public class GenericProducer extends AbstractProducer<GenericRecord> {
 
   @Override
   protected ProducerBuilder<GenericRecord> getProducerBuilder(PulsarClient client) {
-    if (this.schemaString == null) { throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is \"AVRO\" or \"JSON\"");}
+    if (this.schemaString == null) { throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null");}
     
     SchemaDefinition<GenericRecord> schemaDef = SchemaDefinition
       .<GenericRecord>builder()

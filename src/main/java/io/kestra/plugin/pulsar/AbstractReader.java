@@ -52,22 +52,6 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
 
     private Duration maxDuration;
 
-    @io.swagger.v3.oas.annotations.media.Schema(
-      title = "JSON strong of the topics schema",
-      description = "Required for connecting with topics using AVRO or JSON schemas"
-    )
-    @PluginProperty
-    private String schemaString;
-
-    @io.swagger.v3.oas.annotations.media.Schema(
-      title = "The topics schema type. If not AVRO or JSON, leave as byte",
-      description = "Required for connecting with topics using AVRO or JSON schemas"
-    )
-    @NotNull
-    @PluginProperty(dynamic = true)
-    @Builder.Default
-    private String schemaType = "byte";
-
     public Output read(RunContext runContext, Supplier<List<Message<byte[]>>> supplier) throws Exception {
       File tempFile = runContext.tempFile(".ion").toFile();
         Map<String, Integer> count = new HashMap<>();
@@ -78,8 +62,8 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
         try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tempFile))) {
             do {
                 for (Message<byte[]> message : supplier.get()) {
-                    boolean applySchema = this.schemaType.toLowerCase().equals("avro") || this.schemaType.toLowerCase().equals("json");
-                    if (applySchema && this.schemaString == null){ throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is \"AVRO\" or \"JSON\""); }
+                    boolean applySchema = this.schemaType != null;
+                    if (applySchema && this.schemaString == null){ throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null"); }
 
                     Map<Object, Object> map = new HashMap<>();
                     map.put("key", message.getKey());
