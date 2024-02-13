@@ -133,23 +133,17 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     @Override
     public Output run(RunContext runContext) throws Exception {        
         try (PulsarClient client = PulsarService.client(this, runContext)) {
-          AbstractProducer<?> producer;
-          switch (this.schemaType) {
-            case AVRO:
-            case JSON:
-                producer = new GenericProducer(runContext, client, this.schemaString, this.schemaType);
-                break;
-            default:
-                producer = new ByteProducer(runContext, client, this.serializer);
-                break;
-          }
-  
-          producer.constructProducer(this.topic, this.producerName, this.accessMode,this.encryptionKey, this.compressionType, this.producerProperties);
-          int messageCount = producer.produceMessage(this.from);
+            AbstractProducer<?> producer = switch (this.schemaType) {
+                case AVRO, JSON -> new GenericRecordProducer(runContext, client, this.schemaString, this.schemaType);
+                default -> new ByteArrayProducer(runContext, client, this.serializer);
+            };
 
-          return Output.builder()
-              .messagesCount(messageCount)
-              .build();
+            producer.constructProducer(this.topic, this.producerName, this.accessMode,this.encryptionKey, this.compressionType, this.producerProperties);
+            int messageCount = producer.produceMessage(this.from);
+
+            return Output.builder()
+                .messagesCount(messageCount)
+                .build();
         }
     }
 

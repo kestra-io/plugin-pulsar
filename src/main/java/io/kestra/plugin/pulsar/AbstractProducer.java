@@ -25,14 +25,13 @@ import reactor.core.publisher.FluxSink;
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
 public abstract class AbstractProducer<T> {
-    
+
     ProducerBuilder<T> producerBuilder;
-    
+
     Producer<T> producer;
-    
-    PulsarClient client;
-    
-    RunContext runContext;
+
+    private final PulsarClient client;
+    private final RunContext runContext;
     
     
     public AbstractProducer(RunContext runContext, PulsarClient client) {
@@ -47,11 +46,11 @@ public abstract class AbstractProducer<T> {
         String encryptionKey,
         CompressionType compressionType,
         Map<String, String> producerProperties ) throws Exception {
-        
+
         this.producerBuilder = this.getProducerBuilder(this.client);
         this.producerBuilder
-        .topic(this.runContext.render(topic))
-        .enableBatching(true);
+            .topic(this.runContext.render(topic))
+            .enableBatching(true);
         
         if (producerName != null) {
             this.producerBuilder.producerName(this.runContext.render(producerName));
@@ -71,13 +70,13 @@ public abstract class AbstractProducer<T> {
         
         if (producerProperties != null) {
             this.producerBuilder.properties(producerProperties
-            .entrySet()
-            .stream()
-            .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
-            this.runContext.render(e.getKey()),
-            this.runContext.render(e.getValue())
-            )))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                .entrySet()
+                .stream()
+                .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
+                    this.runContext.render(e.getKey()),
+                    this.runContext.render(e.getValue())
+                )))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
             );
         }
     }

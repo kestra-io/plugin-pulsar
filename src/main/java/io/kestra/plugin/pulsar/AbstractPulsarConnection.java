@@ -18,16 +18,16 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
 
     private TlsOptions tlsOptions;
 
-    @io.swagger.v3.oas.annotations.media.Schema(
+    @Schema(
       title = "JSON string of the topic's schema",
       description = "Required for connecting with topics with a defined schema and strict schema checking"
     )
     @PluginProperty(dynamic = true)
     protected String schemaString;
 
-    @io.swagger.v3.oas.annotations.media.Schema(
+    @Schema(
       title = "The schema type of the topic",
-      description = "Can be one of either AVRO or JSON. Leave as NONE for topics without strict schema checking"
+      description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
     )
     @PluginProperty(dynamic = true)
     @Builder.Default

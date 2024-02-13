@@ -63,7 +63,9 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
             do {
                 for (Message<byte[]> message : supplier.get()) {
                     boolean applySchema = this.schemaType != SchemaType.NONE;
-                    if (applySchema && this.schemaString == null){ throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null"); }
+                    if (applySchema && this.schemaString == null){
+                        throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null");
+                    }
                     
                     Map<Object, Object> map = new HashMap<>();
                     map.put("key", message.getKey());
@@ -87,12 +89,12 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
             output.flush();
             
             count
-            .forEach((s, integer) -> runContext.metric(Counter.of("records", integer, "topic", s)));
+                .forEach((s, integer) -> runContext.metric(Counter.of("records", integer, "topic", s)));
             
             return Output.builder()
-            .messagesCount(count.values().stream().mapToInt(Integer::intValue).sum())
-            .uri(runContext.putTempFile(tempFile))
-            .build();
+                .messagesCount(count.values().stream().mapToInt(Integer::intValue).sum())
+                .uri(runContext.putTempFile(tempFile))
+                .build();
         }
     }
     
@@ -110,7 +112,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
             writer.write(avroObj, encoder);
             encoder.flush();
             boas.flush();
-            return new String(boas.toByteArray(), StandardCharsets.UTF_8);
+            return boas.toString(StandardCharsets.UTF_8);
         }
     }
     
