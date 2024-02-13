@@ -89,11 +89,11 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
 
     @io.swagger.v3.oas.annotations.media.Schema(
       title = "The schema type of the topic",
-      description = "Can be one of either AVRO or JSON. Leave as null for topics without strict schema checking"
+      description = "Can be one of either AVRO or JSON. Leave as NONE for topics without strict schema checking"
     )
     @PluginProperty(dynamic = true)
     @Builder.Default
-    protected SchemaType schemaType = null;
+    protected SchemaType schemaType = SchemaType.NONE;
 
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {

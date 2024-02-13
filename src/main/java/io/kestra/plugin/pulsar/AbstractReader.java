@@ -62,7 +62,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
         try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tempFile))) {
             do {
                 for (Message<byte[]> message : supplier.get()) {
-                    boolean applySchema = this.schemaType != null;
+                    boolean applySchema = this.schemaType != SchemaType.NONE;
                     if (applySchema && this.schemaString == null){ throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null"); }
                     
                     Map<Object, Object> map = new HashMap<>();

@@ -54,6 +54,7 @@ dependencies {
 
     // libs included in the final jar
     api group: 'org.apache.pulsar', name: 'pulsar-client', version: '3.1.2'
+    api group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '3.1.2'
 }
 
 
