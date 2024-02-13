@@ -2,6 +2,7 @@ package io.kestra.plugin.pulsar;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.executions.ExecutionTrigger;
@@ -11,7 +12,6 @@ import io.kestra.core.models.triggers.PollingTriggerInterface;
 import io.kestra.core.models.triggers.TriggerContext;
 import io.kestra.core.models.triggers.TriggerOutput;
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.utils.IdUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -80,11 +80,26 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
 
     private String consumerName;
 
+    @Schema(
+        title = "JSON string of the topic's schema",
+        description = "Required for connecting with topics with a defined schema and strict schema checking"
+    )
+    @PluginProperty(dynamic = true)
+    protected String schemaString;
+
+    @Schema(
+        title = "The schema type of the topic",
+        description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
+    )
+    @PluginProperty(dynamic = true)
+    @Builder.Default
+    protected SchemaType schemaType = SchemaType.NONE;
+
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         RunContext runContext = conditionContext.getRunContext();
         Logger logger = runContext.logger();
-
+        
         Consume task = Consume.builder()
             .id(this.id)
             .type(Consume.class.getName())
@@ -102,6 +117,8 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             .consumerProperties(this.consumerProperties)
             .encryptionKey(this.encryptionKey)
             .consumerName(this.consumerName)
+            .schemaString(this.schemaString)
+            .schemaType(this.schemaType)
             .build();
         Consume.Output run = task.run(runContext);
 
@@ -112,7 +129,6 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
         if (run.getMessagesCount() == 0) {
             return Optional.empty();
         }
-
         ExecutionTrigger executionTrigger = ExecutionTrigger.of(
             this,
             run
@@ -130,3 +146,4 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
         return Optional.of(execution);
     }
 }
+
