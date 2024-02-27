@@ -268,6 +268,108 @@ public class PulsarTest {
         Consume.Output consumeOutput = consume.run(runContext);
         assertThat(consumeOutput.getMessagesCount(), is(1));
     }
+
+    @Test
+    void nestedRecordTypeArray() throws Exception {
+      RunContext runContext = runContextFactory.of(ImmutableMap.of());
+        String topic = "tu_" + IdUtils.create();
+        String namespace = "public/default";
+        String fullTopicName = namespace + "/" + topic;
+        
+        // Configure the topic to have strict schema rules and set the schema
+        PulsarAdmin admin = PulsarAdmin.builder()
+            .serviceHttpUrl("http://localhost:28080")
+            .build();
+            
+        admin.namespaces().setIsAllowAutoUpdateSchema(namespace, false);
+        admin.topics().createNonPartitionedTopic(fullTopicName);
+        admin.topics().setSchemaValidationEnforced(fullTopicName, true);
+
+        String schemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"SubType\", \"fields\": [{\"name\":\"testVal\", \"type\":\"int\"}]}}}, {\"name\": \"int\", \"type\": \"int\"}]}";
+        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord>builder().withJsonDef(schemaString).build()).getSchemaInfo());
+
+        ImmutableMap<Object, Object> item = ImmutableMap.builder()
+        .put("value", Map.of(
+            "string", "hello",
+            "array", Arrays.asList(new HashMap<String, Integer>(){{put("testVal", 3);}}, new HashMap<String, Integer>(){{put("testVal", 3);}}),
+            "int", 2
+        ))
+        .build();
+
+        Produce task = Produce.builder()
+            .uri("pulsar://localhost:26650")
+            .topic(topic)
+            .from(item)
+            .schemaType(SchemaType.AVRO)
+            .schemaString(schemaString)
+            .build();
+
+        Produce.Output runOutput = task.run(runContext);
+        assertThat(runOutput.getMessagesCount(), is(1));
+
+        Consume consume = Consume.builder()
+            .uri("pulsar://localhost:26650")
+            .subscriptionName(IdUtils.create())
+            .deserializer(task.getSerializer())
+            .topic(task.getTopic())
+            .schemaType(task.schemaType)
+            .schemaString(task.schemaString)
+            .build();
+
+        Consume.Output consumeOutput = consume.run(runContext);
+        assertThat(consumeOutput.getMessagesCount(), is(1));
+    }
+
+    @Test
+    void nestedRecordTypeMap() throws Exception {
+      RunContext runContext = runContextFactory.of(ImmutableMap.of());
+        String topic = "tu_" + IdUtils.create();
+        String namespace = "public/default";
+        String fullTopicName = namespace + "/" + topic;
+        
+        // Configure the topic to have strict schema rules and set the schema
+        PulsarAdmin admin = PulsarAdmin.builder()
+            .serviceHttpUrl("http://localhost:28080")
+            .build();
+            
+        admin.namespaces().setIsAllowAutoUpdateSchema(namespace, false);
+        admin.topics().createNonPartitionedTopic(fullTopicName);
+        admin.topics().setSchemaValidationEnforced(fullTopicName, true);
+
+        String schemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"map\", \"type\": {\"type\": \"map\", \"values\": {\"type\": \"record\", \"name\": \"SubType\", \"fields\": [{\"name\":\"testVal\", \"type\":\"int\"}]}}}, {\"name\": \"int\", \"type\": \"int\"}]}";
+        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord>builder().withJsonDef(schemaString).build()).getSchemaInfo());
+
+        ImmutableMap<Object, Object> item = ImmutableMap.builder()
+        .put("value", Map.of(
+            "string", "hello",
+            "map", new HashMap<String, Object>(){{ put("a", new HashMap<String, Integer>(){{put("testVal", 3);}}); put("b", new HashMap<String, Integer>(){{put("testVal", 3);}}); }},
+            "int", 2
+        ))
+        .build();
+
+        Produce task = Produce.builder()
+            .uri("pulsar://localhost:26650")
+            .topic(topic)
+            .from(item)
+            .schemaType(SchemaType.AVRO)
+            .schemaString(schemaString)
+            .build();
+
+        Produce.Output runOutput = task.run(runContext);
+        assertThat(runOutput.getMessagesCount(), is(1));
+
+        Consume consume = Consume.builder()
+            .uri("pulsar://localhost:26650")
+            .subscriptionName(IdUtils.create())
+            .deserializer(task.getSerializer())
+            .topic(task.getTopic())
+            .schemaType(task.schemaType)
+            .schemaString(task.schemaString)
+            .build();
+
+        Consume.Output consumeOutput = consume.run(runContext);
+        assertThat(consumeOutput.getMessagesCount(), is(1));
+    }
   
     @Test
     void missingSchemaString() throws Exception {
