@@ -22,8 +22,8 @@ repositories {
     }
 }
 
-sourceCompatibility = 17
-targetCompatibility = 17
+sourceCompatibility = 21
+targetCompatibility = 21
 
 group "io.kestra.plugin"
 description 'Leverage Apache Pulsar messaging in Kestra data orchestration.'
@@ -44,12 +44,10 @@ dependencies {
     annotationProcessor "io.micronaut.validation:micronaut-validation-processor"
 
     compileOnly platform("io.micronaut.platform:micronaut-platform:$micronautVersion")
-    compileOnly "io.micronaut:micronaut-inject"
-    compileOnly "io.micronaut.validation:micronaut-validation"
     compileOnly "io.micronaut.reactor:micronaut-reactor"
-    compileOnly "io.micronaut:micronaut-jackson-databind"
 
     // kestra
+    annotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
 
     // libs included in the final jar
@@ -90,6 +88,7 @@ dependencies {
     testImplementation group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '3.2.0'
 
     // test deps needed only for to have a runner
+    testAnnotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
     testImplementation group: "io.kestra", name: "core", version: kestraVersion
     testImplementation group: "io.kestra", name: "repository-memory", version: kestraVersion
     testImplementation group: "io.kestra", name: "runner-memory", version: kestraVersion
