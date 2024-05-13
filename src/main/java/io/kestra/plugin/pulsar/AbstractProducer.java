@@ -90,7 +90,7 @@ public abstract class AbstractProducer<T> {
             Flux<Integer> resultFlowable;
             if (from instanceof String) {
                 URI uri = new URI(runContext.render((String) from));
-                try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.uriToInputStream(uri)))) {
+                try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.storage().getFile(uri)))) {
                     flowable = Flux.create(FileSerde.reader(inputStream), FluxSink.OverflowStrategy.BUFFER);
                     resultFlowable = this.buildFlowable(flowable);
                     

@@ -93,7 +93,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
             
             return Output.builder()
                 .messagesCount(count.values().stream().mapToInt(Integer::intValue).sum())
-                .uri(runContext.putTempFile(tempFile))
+                .uri(runContext.storage().putFile(tempFile))
                 .build();
         }
     }
