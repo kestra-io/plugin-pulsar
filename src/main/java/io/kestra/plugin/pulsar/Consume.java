@@ -55,9 +55,6 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
     private String subscriptionName;
 
     @Builder.Default
-    private SerdeType deserializer = SerdeType.STRING;
-
-    @Builder.Default
     private SubscriptionInitialPosition initialPosition = SubscriptionInitialPosition.Earliest;
 
     @Builder.Default
@@ -196,7 +193,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
                     .topic(message.getTopicName());
 
             try {
-                messageBuilder.value(applySchema ? this.deserializeWithSchema(message.getValue()) : this.deserializer.deserialize(message.getValue()));
+                messageBuilder.value(applySchema ? this.deserializeWithSchema(message.getValue()) : this.getDeserializer().deserialize(message.getValue()));
             } catch (Throwable e) {
                 onException.handle(e);
             }
