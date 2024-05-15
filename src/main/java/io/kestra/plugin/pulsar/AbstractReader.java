@@ -98,7 +98,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
         }
     }
     
-    private String deserializeWithSchema(byte[] avroBinary) throws IOException {
+    public String deserializeWithSchema(byte[] avroBinary) throws IOException {
         Schema schema = Schema.parse(this.schemaString);
         
         // byte to datum

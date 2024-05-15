@@ -19,17 +19,18 @@ import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 @MicronautTest
-class TriggerTest {
+class RealtimeTriggerTest {
     @Inject
     private ApplicationContext applicationContext;
 
@@ -54,8 +55,8 @@ class TriggerTest {
         CountDownLatch queueCount = new CountDownLatch(1);
 
         // scheduler
-        Worker worker = new Worker(applicationContext, 8, null);
         try (
+            Worker worker = applicationContext.createBean(Worker.class, UUID.randomUUID().toString(), 8, null);
             AbstractScheduler scheduler = new DefaultScheduler(
                 this.applicationContext,
                 this.flowListenersService,
@@ -65,15 +66,15 @@ class TriggerTest {
             AtomicReference<Execution> last = new AtomicReference<>();
 
             // wait for execution
-            executionQueue.receive(TriggerTest.class, execution -> {
+            executionQueue.receive(RealtimeTriggerTest.class, execution -> {
                 last.set(execution.getLeft());
 
                 queueCount.countDown();
-                assertThat(execution.getLeft().getFlowId(), is("trigger"));
+                assertThat(execution.getLeft().getFlowId(), is("realtime"));
             });
 
             Produce task = Produce.builder()
-                .id(TriggerTest.class.getSimpleName())
+                .id(RealtimeTriggerTest.class.getSimpleName())
                 .type(Produce.class.getName())
                 .uri("pulsar://localhost:26650")
                 .serializer(SerdeType.JSON)
@@ -82,10 +83,6 @@ class TriggerTest {
                     ImmutableMap.builder()
                         .put("key", "key1")
                         .put("value", "value1")
-                        .build(),
-                    ImmutableMap.builder()
-                        .put("key", "key2")
-                        .put("value", "value2")
                         .build()
                 ))
                 .build();
@@ -93,15 +90,18 @@ class TriggerTest {
             worker.run();
             scheduler.run();
 
-            repositoryLoader.load(Objects.requireNonNull(TriggerTest.class.getClassLoader().getResource("flows/trigger.yaml")));
+            repositoryLoader.load(Objects.requireNonNull(RealtimeTriggerTest.class.getClassLoader().getResource("flows/realtime.yaml")));
 
             task.run(TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of()));
 
             queueCount.await(1, TimeUnit.MINUTES);
 
-            Integer trigger = (Integer) last.get().getTrigger().getVariables().get("messagesCount");
+            Map<String, Object> variables = last.get().getTrigger().getVariables();
 
-            assertThat(trigger, greaterThanOrEqualTo(2));
+            assertThat(variables.get("key"), is("key1"));
+            assertThat(variables.get("value"), is("value1"));
+            assertThat(variables.get("topic"), is("persistent://public/default/tu_trigger"));
+            assertThat(variables.get("messageId"), notNullValue());
         }
     }
 }
