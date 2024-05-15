@@ -6,19 +6,16 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.triggers.*;
-import io.kestra.core.runners.RunContext;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.Optional;
 
 @SuperBuilder
 @ToString
@@ -39,7 +36,8 @@ import java.util.Optional;
                 "subscriptionName: kestra_trigger_sub",
             }
         )
-    }
+    },
+    beta = true
 )
 public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerInterface, TriggerOutput<AbstractReader.Output>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
     @Builder.Default
@@ -116,8 +114,7 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
             .build();
 
         return Flux.from(task.stream(conditionContext.getRunContext()))
-            .map(message -> TriggerService.generateRealtimeExecution(this, context, message))
-            .next();
+            .map(message -> TriggerService.generateRealtimeExecution(this, context, message));
     }
 }
 

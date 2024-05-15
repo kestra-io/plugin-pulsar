@@ -10,20 +10,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.*;
-import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumReader;
-import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumWriter;
-import org.apache.pulsar.shade.org.apache.avro.io.*;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
-import reactor.core.scheduler.Schedulers;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.AbstractMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -171,10 +162,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
                     } finally {
                         sink.complete();
                     }
-                },
-                FluxSink.OverflowStrategy.BUFFER
-            )
-            .subscribeOn(Schedulers.boundedElastic());
+                });
     }
 
     private Function<Message<byte[]>, PulsarMessage> buildMessage(ExceptionHandler<Throwable> onException) {
