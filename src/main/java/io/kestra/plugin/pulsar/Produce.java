@@ -36,7 +36,7 @@ import jakarta.validation.constraints.NotNull;
                 "",
                 "tasks:",
                 "  - id: csvReader",
-                "    type: io.kestra.plugin.serdes.csv.CsvReader",
+                "    type: io.kestra.plugin.serdes.csv.CsvToIon",
                 "    from: \"{{ inputs.file }}\"",
                 "  - id: fileTransform",
                 "    type: io.kestra.plugin.scripts.nashorn.FileTransform",
