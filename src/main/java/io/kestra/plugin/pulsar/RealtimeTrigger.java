@@ -6,9 +6,14 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.triggers.*;
+import io.kestra.core.runners.RunContext;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.apache.pulsar.client.api.Consumer;
+import org.apache.pulsar.client.api.ConsumerBuilder;
+import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.reactivestreams.Publisher;
@@ -16,6 +21,9 @@ import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuperBuilder
 @ToString
@@ -90,6 +98,14 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
     @Builder.Default
     protected SchemaType schemaType = SchemaType.NONE;
 
+    @Builder.Default
+    @Getter(AccessLevel.NONE)
+    private final AtomicBoolean isActive = new AtomicBoolean(true);
+
+    @Builder.Default
+    @Getter(AccessLevel.NONE)
+    private final CountDownLatch waitForTermination = new CountDownLatch(1);
+
     @Override
     public Publisher<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         Consume task = Consume.builder()
@@ -113,8 +129,65 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
             .schemaType(this.schemaType)
             .build();
 
-        return Flux.from(task.stream(conditionContext.getRunContext()))
+        return Flux.from(publisher(task, conditionContext.getRunContext()))
             .map(message -> TriggerService.generateRealtimeExecution(this, context, message));
+    }
+
+    public Publisher<Consume.PulsarMessage> publisher(final Consume task, final RunContext runContext) {
+        return Flux.create(emitter -> {
+                try (PulsarClient client = PulsarService.client(task, runContext)) {
+                    ConsumerBuilder<byte[]> consumerBuilder = task.newConsumerBuilder(runContext, client);
+                    try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
+                        while (isActive.get()) {
+                            // wait for a new message before checking active flag.
+                            final Message<byte[]> received = consumer.receive(500, TimeUnit.MILLISECONDS);
+                            if (received != null) {
+                                try {
+                                    emitter.next(task.buildMessage(received));
+                                    consumer.acknowledge(received);
+                                } catch (Exception e) {
+                                    consumer.negativeAcknowledge(received);
+                                    throw e; // will be handled by the next catch.
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception exception) {
+                    emitter.error(exception);
+                } finally {
+                    emitter.complete();
+                    waitForTermination.countDown();
+                }
+            });
+    }
+
+    /**
+     * {@inheritDoc}
+     **/
+    @Override
+    public void kill() {
+        stop(true);
+    }
+
+    /**
+     * {@inheritDoc}
+     **/
+    @Override
+    public void stop() {
+        stop(false); // must be non-blocking
+    }
+
+    private void stop(boolean wait) {
+        if (!isActive.compareAndSet(true, false)) {
+            return;
+        }
+        if (wait) {
+            try {
+                this.waitForTermination.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }
 
