@@ -1,22 +1,19 @@
 package io.kestra.plugin.pulsar;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.Rethrow;
-import io.micronaut.core.exceptions.ExceptionHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.*;
-import org.reactivestreams.Publisher;
-import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -60,31 +57,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
     @Override
     public AbstractReader.Output run(RunContext runContext) throws Exception {
         try (PulsarClient client = PulsarService.client(this, runContext)) {
-            ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
-                .topics(this.topics(runContext))
-                .subscriptionName(runContext.render(this.subscriptionName))
-                .subscriptionInitialPosition(this.initialPosition)
-                .subscriptionType(this.subscriptionType);
-
-            if (this.consumerName != null) {
-                consumerBuilder.consumerName(runContext.render(this.consumerName));
-            }
-
-            if (this.consumerProperties != null) {
-                consumerBuilder.properties(this.consumerProperties
-                    .entrySet()
-                    .stream()
-                    .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
-                        runContext.render(e.getKey()),
-                        runContext.render(e.getValue())
-                    )))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                );
-            }
-
-            if (this.encryptionKey != null) {
-                consumerBuilder.defaultCryptoKeyReader(runContext.render(this.encryptionKey));
-            }
+            ConsumerBuilder<byte[]> consumerBuilder = newConsumerBuilder(runContext, client);
 
             try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
                 return this.read(
@@ -110,88 +83,55 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
         }
     }
 
-    public Publisher<PulsarMessage> stream(RunContext runContext) {
-        return Flux.<PulsarMessage>create(
-                sink -> {
-                    try (PulsarClient client = PulsarService.client(this, runContext)) {
-                        ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
-                            .topics(this.topics(runContext))
-                            .subscriptionName(runContext.render(this.subscriptionName))
-                            .subscriptionInitialPosition(this.initialPosition)
-                            .subscriptionType(this.subscriptionType);
+    public ConsumerBuilder<byte[]> newConsumerBuilder(final RunContext runContext,
+                                                      final PulsarClient client) throws IllegalVariableEvaluationException {
+        ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
+            .topics(this.topics(runContext))
+            .subscriptionName(runContext.render(this.subscriptionName))
+            .subscriptionInitialPosition(this.initialPosition)
+            .subscriptionType(this.subscriptionType);
 
-                        if (this.consumerName != null) {
-                            consumerBuilder.consumerName(runContext.render(this.consumerName));
-                        }
+        if (this.consumerName != null) {
+            consumerBuilder.consumerName(runContext.render(this.consumerName));
+        }
 
-                        if (this.consumerProperties != null) {
-                            consumerBuilder.properties(this.consumerProperties
-                                .entrySet()
-                                .stream()
-                                .map(
-                                    throwFunction(e -> new AbstractMap.SimpleEntry<>(
-                                            runContext.render(e.getKey()),
-                                            runContext.render(e.getValue())
-                                        )
-                                    )
-                                )
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                            );
-                        }
+        if (this.consumerProperties != null) {
+            consumerBuilder.properties(this.consumerProperties
+                .entrySet()
+                .stream()
+                .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
+                    runContext.render(e.getKey()),
+                    runContext.render(e.getValue())
+                )))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+            );
+        }
 
-                        if (this.encryptionKey != null) {
-                            consumerBuilder.defaultCryptoKeyReader(runContext.render(this.encryptionKey));
-                        }
-
-                        try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
-                            StreamSupport
-                                .stream(consumer.batchReceive().spliterator(), false)
-                                .map(
-                                    throwFunction(message -> {
-                                            consumer.acknowledge(message);
-
-                                            return message;
-                                        }
-                                    )
-                                )
-                                .map(buildMessage(sink::error))
-                                .forEach(sink::next);
-                        }
-                    } catch (Throwable throwable) {
-                        sink.error(throwable);
-                    } finally {
-                        sink.complete();
-                    }
-                });
+        if (this.encryptionKey != null) {
+            consumerBuilder.defaultCryptoKeyReader(runContext.render(this.encryptionKey));
+        }
+        return consumerBuilder;
     }
 
-    private Function<Message<byte[]>, PulsarMessage> buildMessage(ExceptionHandler<Throwable> onException) {
-        return message -> {
-            boolean applySchema = this.schemaType != SchemaType.NONE;
-            if (applySchema && this.schemaString == null) {
-                onException.handle(
-                    new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null")
-                );
-            }
+    public PulsarMessage buildMessage(final Message<byte[]> message) throws Exception {
+        boolean applySchema = this.schemaType != SchemaType.NONE;
+        if (applySchema && this.schemaString == null) {
+            throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null");
+        }
 
-            PulsarMessage.PulsarMessageBuilder messageBuilder =
-                PulsarMessage.builder()
-                    .key(message.getKey())
-                    .properties(message.getProperties())
-                    .topic(message.getTopicName());
+        PulsarMessage.PulsarMessageBuilder builder =
+            PulsarMessage.builder()
+                .key(message.getKey())
+                .properties(message.getProperties())
+                .topic(message.getTopicName());
 
-            try {
-                messageBuilder.value(applySchema ? this.deserializeWithSchema(message.getValue()) : this.getDeserializer().deserialize(message.getValue()));
-            } catch (Throwable e) {
-                onException.handle(e);
-            }
+        builder.value(applySchema ? this.deserializeWithSchema(message.getValue()) : this.getDeserializer().deserialize(message.getValue()));
 
-            if (message.getEventTime() != 0) {
-                messageBuilder.eventTime(Instant.ofEpochMilli(message.getEventTime()));
-            }
+        if (message.getEventTime() != 0) {
+            builder.eventTime(Instant.ofEpochMilli(message.getEventTime()));
+        }
 
-            return messageBuilder.messageId(message.getMessageId().toString()).build();
-        };
+        return builder.messageId(message.getMessageId().toString()).build();
     }
 
     @Getter
