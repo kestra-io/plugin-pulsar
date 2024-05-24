@@ -24,7 +24,7 @@ import java.util.Optional;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Wait for messages from a Pulsar topic."
+    title = "Consume messages periodically from Pulsar topics and create one execution per batch."
 )
 @Plugin(
     examples = {

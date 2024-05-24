@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "React and consume messages from a Pulsar topic."
+    title = "Consume a message in real-time from Pulsar topics and create one execution per message."
 )
 @Plugin(
     examples = {
