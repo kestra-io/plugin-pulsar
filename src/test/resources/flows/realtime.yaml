@@ -4,7 +4,6 @@ namespace: io.kestra.tests
 triggers:
   - id: watch
     type: io.kestra.plugin.pulsar.RealtimeTrigger
-    interval: PT10S
     topic: tu_trigger
     uri: pulsar://localhost:26650
     deserializer: JSON

@@ -48,9 +48,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
     beta = true
 )
 public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerInterface, TriggerOutput<AbstractReader.Output>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
-    @Builder.Default
-    private final Duration interval = Duration.ofSeconds(60);
-
     private String uri;
 
     private String authenticationToken;
@@ -64,10 +61,6 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
 
     @Builder.Default
     private Duration pollDuration = Duration.ofSeconds(2);
-
-    private Integer maxRecords;
-
-    private Duration maxDuration;
 
     private String subscriptionName;
 
@@ -117,8 +110,6 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
             .topic(this.topic)
             .deserializer(this.deserializer)
             .pollDuration(this.pollDuration)
-            .maxRecords(this.maxRecords)
-            .maxDuration(this.maxDuration)
             .subscriptionName(this.subscriptionName)
             .initialPosition(this.initialPosition)
             .subscriptionType(this.subscriptionType)

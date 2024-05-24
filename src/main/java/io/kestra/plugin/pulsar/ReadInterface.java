@@ -29,18 +29,4 @@ public interface ReadInterface {
     @NotNull
     @PluginProperty(dynamic = true)
     Duration getPollDuration();
-
-    @Schema(
-        title = "The maximum number of records to fetch before stopping.",
-        description = "It's not a hard limit and is evaluated every second."
-    )
-    @PluginProperty(dynamic = false)
-    Integer getMaxRecords();
-
-    @Schema(
-        title = "The maximum duration waiting for new record.",
-        description = "It's not a hard limit and is evaluated every second."
-    )
-    @PluginProperty(dynamic = false)
-    Duration getMaxDuration();
 }
