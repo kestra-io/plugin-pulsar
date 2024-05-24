@@ -57,8 +57,18 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @Builder.Default
     private Duration pollDuration = Duration.ofSeconds(2);
 
+    @io.swagger.v3.oas.annotations.media.Schema(
+        title = "The maximum number of records to fetch before stopping.",
+        description = "It's not a hard limit and is evaluated every second."
+    )
+    @PluginProperty
     private Integer maxRecords;
 
+    @io.swagger.v3.oas.annotations.media.Schema(
+        title = "The maximum duration waiting for new record.",
+        description = "It's not a hard limit and is evaluated every second."
+    )
+    @PluginProperty
     private Duration maxDuration;
 
     private String subscriptionName;
