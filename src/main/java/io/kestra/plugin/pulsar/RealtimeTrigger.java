@@ -44,8 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
                 "subscriptionName: kestra_trigger_sub",
             }
         )
-    },
-    beta = true
+    }
 )
 public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerInterface, TriggerOutput<AbstractReader.Output>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
     private String uri;
