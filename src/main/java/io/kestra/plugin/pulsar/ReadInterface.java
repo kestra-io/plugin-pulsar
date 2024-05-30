@@ -21,12 +21,4 @@ public interface ReadInterface {
     @NotNull
     @PluginProperty(dynamic = true)
     SerdeType getDeserializer();
-
-    @Schema(
-        title = "Duration waiting for record to be polled.",
-        description = "If no records are available, the maximum wait to wait for a new record. "
-    )
-    @NotNull
-    @PluginProperty(dynamic = true)
-    Duration getPollDuration();
 }

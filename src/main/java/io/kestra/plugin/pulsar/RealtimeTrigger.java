@@ -60,6 +60,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
     }
 )
 public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerInterface, TriggerOutput<AbstractReader.Output>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
+    private static final int DEFAULT_RECEIVE_TIMEOUT = 500;
+
     private String uri;
 
     private String authenticationToken;
@@ -70,9 +72,6 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
 
     @Builder.Default
     private SerdeType deserializer = SerdeType.STRING;
-
-    @Builder.Default
-    private Duration pollDuration = Duration.ofSeconds(2);
 
     private String subscriptionName;
 
@@ -121,7 +120,6 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
             .tlsOptions(this.tlsOptions)
             .topic(this.topic)
             .deserializer(this.deserializer)
-            .pollDuration(this.pollDuration)
             .subscriptionName(this.subscriptionName)
             .initialPosition(this.initialPosition)
             .subscriptionType(this.subscriptionType)
@@ -143,7 +141,7 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
                     try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
                         while (isActive.get()) {
                             // wait for a new message before checking active flag.
-                            final Message<byte[]> received = consumer.receive(500, TimeUnit.MILLISECONDS);
+                            final Message<byte[]> received = consumer.receive(DEFAULT_RECEIVE_TIMEOUT, TimeUnit.MILLISECONDS);
                             if (received != null) {
                                 try {
                                     emitter.next(task.buildMessage(received));

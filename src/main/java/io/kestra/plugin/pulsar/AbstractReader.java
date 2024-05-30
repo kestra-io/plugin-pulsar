@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-public abstract class AbstractReader extends AbstractPulsarConnection implements ReadInterface, RunnableTask<AbstractReader.Output> {
+public abstract class AbstractReader extends AbstractPulsarConnection implements ReadInterface, PollingInterface, RunnableTask<AbstractReader.Output> {
     private Object topic;
     
     @Builder.Default
