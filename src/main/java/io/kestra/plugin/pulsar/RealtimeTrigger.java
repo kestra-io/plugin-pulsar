@@ -31,17 +31,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Consume a message in real-time from Pulsar topics and create one execution per message."
+    title = "Consume a message in real-time from Pulsar topics and create one execution per message.",
+    description = "If you would like to consume multiple messages processed within a given time frame and process them in batch, you can use the [io.kestra.plugin.pulsar.Trigger](https://kestra.io/plugins/plugin-pulsar/triggers/io.kestra.plugin.pulsar.trigger) instead."
 )
 @Plugin(
     examples = {
         @Example(
-            code = {
-                "interval: PT30S",
-                "topic: kestra_trigger",
-                "uri: pulsar://localhost:26650",
-                "deserializer: JSON",
-                "subscriptionName: kestra_trigger_sub",
+            title = "Consume a message from a Pulsar topic in real-time.",
+            full = true,
+            code = {"""
+                id: pulsar
+                namespace: myteam
+
+                tasks:
+                - id: log
+                  type: io.kestra.plugin.core.log.Log
+                  message: "{{ trigger.value }}"
+
+                triggers:
+                - id: realtime_trigger
+                  type: io.kestra.plugin.pulsar.RealtimeTrigger
+                  topic: kestra_trigger
+                  uri: pulsar://localhost:26650
+                  deserializer: JSON
+                  subscriptionName: kestra_trigger_sub"""
             }
         )
     }
