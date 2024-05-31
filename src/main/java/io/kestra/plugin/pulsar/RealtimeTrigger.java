@@ -59,9 +59,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
         )
     }
 )
-public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerInterface, TriggerOutput<AbstractReader.Output>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
+public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerInterface, TriggerOutput<Consume.PulsarMessage>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
     private static final int DEFAULT_RECEIVE_TIMEOUT = 500;
-
+    
     private String uri;
 
     private String authenticationToken;
