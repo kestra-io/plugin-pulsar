@@ -64,7 +64,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
 
     
     public Output read(RunContext runContext, Supplier<List<Message<byte[]>>> supplier) throws Exception {
-        File tempFile = runContext.tempFile(".ion").toFile();
+        File tempFile = runContext.workingDir().createTempFile(".ion").toFile();
         Map<String, Integer> count = new HashMap<>();
         AtomicInteger total = new AtomicInteger();
         ZonedDateTime started = ZonedDateTime.now();

@@ -13,7 +13,7 @@ import java.util.Map;
 
 public abstract class PulsarService {
     public static String decodeBase64(RunContext runContext, String value) throws IllegalVariableEvaluationException, IOException {
-        Path path = runContext.tempFile(Base64.getDecoder().decode(runContext.render(value).replace("\n", "")));
+        Path path = runContext.workingDir().createTempFile(Base64.getDecoder().decode(runContext.render(value).replace("\n", "")));
 
         return path.toAbsolutePath().toString();
     }
