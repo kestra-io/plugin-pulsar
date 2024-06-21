@@ -29,7 +29,7 @@ import jakarta.validation.constraints.NotNull;
             full = true,
             code = {
                 "id: produce",
-                "namespace: io.kestra.tests",
+                "namespace: company.team",
                 "inputs:",
                 "  - type: FILE",
                 "    id: file",
