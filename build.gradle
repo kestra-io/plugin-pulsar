@@ -54,7 +54,10 @@ dependencies {
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
 
     // libs included in the final jar
-    api group: 'org.apache.pulsar', name: 'pulsar-client', version: '3.2.3'
+    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '3.2.3')
+    // this will enforce Jackson to the version defined in the Platform
+    api group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
+    api group: 'com.fasterxml.jackson.core', name: 'jackson-annotations'
 }
 
 
