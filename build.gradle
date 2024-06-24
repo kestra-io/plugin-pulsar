@@ -54,7 +54,7 @@ dependencies {
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
 
     // libs included in the final jar
-    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '3.2.3')
+    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '3.3.0')
     // this will enforce Jackson to the version defined in the Platform
     api group: 'com.fasterxml.jackson.core', name: 'jackson-databind'
     api group: 'com.fasterxml.jackson.core', name: 'jackson-annotations'
@@ -92,7 +92,7 @@ dependencies {
     testImplementation "io.micronaut.test:micronaut-test-junit5"
     testImplementation "io.micronaut.reactor:micronaut-reactor"
 
-    testImplementation group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '3.2.3'
+    testImplementation group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '3.3.0'
 
     // test deps needed only for to have a runner
     testAnnotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
