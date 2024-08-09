@@ -44,17 +44,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
                 namespace: company.team
 
                 tasks:
-                - id: log
-                  type: io.kestra.plugin.core.log.Log
-                  message: "{{ trigger.value }}"
+                  - id: log
+                    type: io.kestra.plugin.core.log.Log
+                    message: "{{ trigger.value }}"
 
                 triggers:
-                - id: realtime_trigger
-                  type: io.kestra.plugin.pulsar.RealtimeTrigger
-                  topic: kestra_trigger
-                  uri: pulsar://localhost:26650
-                  deserializer: JSON
-                  subscriptionName: kestra_trigger_sub"""
+                  - id: realtime_trigger
+                    type: io.kestra.plugin.pulsar.RealtimeTrigger
+                    topic: kestra_trigger
+                    uri: pulsar://localhost:26650
+                    deserializer: JSON
+                    subscriptionName: kestra_trigger_sub"""
             }
         )
     }
