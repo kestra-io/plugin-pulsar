@@ -20,7 +20,6 @@ import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.FileSerde;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
@@ -91,7 +90,7 @@ public abstract class AbstractProducer<T> {
             if (from instanceof String) {
                 URI uri = new URI(runContext.render((String) from));
                 try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.storage().getFile(uri)))) {
-                    flowable = Flux.create(FileSerde.reader(inputStream), FluxSink.OverflowStrategy.BUFFER);
+                    flowable = FileSerde.readAll(inputStream);
                     resultFlowable = this.buildFlowable(flowable);
                     
                     count = resultFlowable
