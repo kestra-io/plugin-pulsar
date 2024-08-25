@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
         @Example(
             title = "Consume a message from a Pulsar topic in real-time.",
             full = true,
-            code = {"""
+            code = """
                 id: pulsar
                 namespace: company.team
 
@@ -54,8 +54,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
                     topic: kestra_trigger
                     uri: pulsar://localhost:26650
                     deserializer: JSON
-                    subscriptionName: kestra_trigger_sub"""
-            }
+                    subscriptionName: kestra_trigger_sub
+                """
         )
     }
 )

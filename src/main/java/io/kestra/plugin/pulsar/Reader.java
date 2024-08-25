@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
             full = true,
             code = """
                 id: pulsar_reader
-                namespace: company.name
+                namespace: company.team
 
                 tasks:
                   - id: reader
