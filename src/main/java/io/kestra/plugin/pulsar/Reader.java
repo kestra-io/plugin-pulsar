@@ -31,11 +31,18 @@ import java.util.concurrent.TimeUnit;
 @Plugin(
     examples = {
         @Example(
-            code = {
-                "uri: pulsar://localhost:26650",
-                "topic: test_kestra",
-                "deserializer: JSON",
-            }
+            full = true,
+            code = """
+                id: pulsar_reader
+                namespace: company.name
+
+                tasks:
+                  - id: reader
+                    type: io.kestra.plugin.pulsar.Reader
+                    uri: pulsar://localhost:26650
+                    topic: test_kestra
+                    deserializer: JSON
+                """
         )
     }
 )
