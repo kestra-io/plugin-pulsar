@@ -27,40 +27,43 @@ import jakarta.validation.constraints.NotNull;
         @Example(
             title = "Read a CSV file, transform it to the right format, and publish it to Pulsar topic.",
             full = true,
-            code = {
-                "id: produce",
-                "namespace: company.team",
-                "inputs:",
-                "  - type: FILE",
-                "    id: file",
-                "",
-                "tasks:",
-                "  - id: csv_reader",
-                "    type: io.kestra.plugin.serdes.csv.CsvToIon",
-                "    from: \"{{ inputs.file }}\"",
-                "  - id: file_transform",
-                "    type: io.kestra.plugin.scripts.nashorn.FileTransform",
-                "    from: \"{{ outputs.csv_reader.uri }}\"",
-                "    script: |",
-                "      var result = {",
-                "        \"key\": row.id,",
-                "        \"value\": {",
-                "          \"username\": row.username,",
-                "          \"tweet\": row.tweet",
-                "        },",
-                "        \"eventTime\": row.timestamp,",
-                "        \"properties\": {",
-                "          \"key\": \"value\"",
-                "        }",
-                "      };",
-                "      row = result",
-                "  - id: produce",
-                "    type: io.kestra.plugin.pulsar.Produce",
-                "    from: \"{{ outputs.file_transform.uri }}\"",
-                "    uri: pulsar://localhost:26650",
-                "    serializer: JSON",
-                "    topic: test_kestra",
-            }
+            code = """
+                id: produce
+                namespace: company.team
+                
+                inputs:
+                  - type: FILE
+                    id: file
+                
+                tasks:
+                  - id: csv_reader
+                    type: io.kestra.plugin.serdes.csv.CsvToIon
+                    from: "{{ inputs.file }}"
+                
+                  - id: file_transform
+                    type: io.kestra.plugin.scripts.nashorn.FileTransform
+                    from: {{ outputs.csv_reader.uri }}"
+                    script: |
+                      var result = {
+                        "key": row.id,
+                        "value": {
+                          "username": row.username,
+                          "tweet": row.tweet
+                        },
+                        "eventTime": row.timestamp,
+                        "properties": {
+                          "key": "value"
+                        }
+                      };
+                      row = result
+                
+                  - id: produce
+                    type: io.kestra.plugin.pulsar.Produce
+                    from: "{{ outputs.file_transform.uri }}"
+                    uri: pulsar://localhost:26650
+                    serializer: JSON
+                    topic: test_kestra
+            """
         )
     }
 )

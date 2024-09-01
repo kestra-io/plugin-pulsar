@@ -30,13 +30,25 @@ import java.util.Optional;
 @Plugin(
     examples = {
         @Example(
-            code = {
-                "interval: PT30S",
-                "topic: kestra_trigger",
-                "uri: pulsar://localhost:26650",
-                "deserializer: JSON",
-                "subscriptionName: kestra_trigger_sub",
-            }
+            full = true,
+            code = """
+                id: pulsar_trigger
+                namespace: company.name
+
+                tasks:
+                  - id: log
+                    type: io.kestra.plugin.core.log.Log
+                    message: "{{ trigger.value }}"
+
+                triggers:
+                  - id: trigger
+                    type: io.kestra.plugin.pulsar.Trigger
+                    interval: PT30S
+                    topic: kestra_trigger
+                    uri: pulsar://localhost:26650
+                    deserializer: JSON
+                    subscriptionName: kestra_trigger_sub
+                """
         )
     }
 )

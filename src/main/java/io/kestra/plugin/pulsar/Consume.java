@@ -30,12 +30,19 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Plugin(
     examples = {
         @Example(
-            code = {
-                "uri: pulsar://localhost:26650",
-                "topic: test_kestra",
-                "deserializer: JSON",
-                "subscriptionName: kestra_flow"
-            }
+            full = true,
+            code = """
+                id: pulsar_consume
+                namespace: company.name
+
+                tasks:
+                  - id: consume
+                    type: io.kestra.plugin.pulsar.Consume
+                    uri: pulsar://localhost:26650
+                    topic: test_kestra
+                    deserializer: JSON
+                    subscriptionName: kestra_flow
+                """
         )
     }
 )
