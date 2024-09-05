@@ -93,17 +93,13 @@ public abstract class AbstractProducer<T> {
                     flowable = FileSerde.readAll(inputStream);
                     resultFlowable = this.buildFlowable(flowable);
                     
-                    count = resultFlowable
-                    .reduce(Integer::sum)
-                    .block();
+                    count = resultFlowable.reduce(Integer::sum).blockOptional().orElse(0);
                 }
             } else {
                 flowable = Flux.fromArray(((List<Object>) from).toArray());
                 resultFlowable = this.buildFlowable(flowable);
                 
-                count = resultFlowable
-                .reduce(Integer::sum)
-                .block();
+                count = resultFlowable.reduce(Integer::sum).blockOptional().orElse(0);
             }
         } else {
             this.produceMessage((Map<String, Object>) from);
