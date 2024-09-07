@@ -33,7 +33,7 @@ import java.util.Optional;
             full = true,
             code = """
                 id: pulsar_trigger
-                namespace: company.name
+                namespace: company.team
 
                 tasks:
                   - id: log

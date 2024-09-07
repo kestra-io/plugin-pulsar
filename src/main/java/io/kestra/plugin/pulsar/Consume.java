@@ -33,7 +33,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
             full = true,
             code = """
                 id: pulsar_consume
-                namespace: company.name
+                namespace: company.team
 
                 tasks:
                   - id: consume
