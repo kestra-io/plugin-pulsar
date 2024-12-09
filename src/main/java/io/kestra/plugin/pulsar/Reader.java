@@ -82,7 +82,7 @@ public class Reader extends AbstractReader {
                 return this.read(
                     runContext,
                     Rethrow.throwSupplier(() -> {
-                        Message<byte[]> message = reader.readNext(this.getPollDuration().getNano(), TimeUnit.NANOSECONDS);
+                        Message<byte[]> message = reader.readNext(runContext.render(this.getPollDuration()).as(Duration.class).orElseThrow().getNano(), TimeUnit.NANOSECONDS);
 
                         if (message == null) {
                             return List.of();

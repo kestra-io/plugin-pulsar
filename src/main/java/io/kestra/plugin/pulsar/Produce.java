@@ -136,8 +136,13 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     @Override
     public Output run(RunContext runContext) throws Exception {        
         try (PulsarClient client = PulsarService.client(this, runContext)) {
-            AbstractProducer<?> producer = switch (this.schemaType) {
-                case AVRO, JSON -> new GenericRecordProducer(runContext, client, this.schemaString, this.schemaType);
+            AbstractProducer<?> producer = switch (runContext.render(this.schemaType).as(SchemaType.class).orElseThrow()) {
+                case AVRO, JSON -> new GenericRecordProducer(
+                    runContext, 
+                    client, 
+                    runContext.render(this.schemaString).as(String.class).orElse(null),
+                    runContext.render(this.schemaType).as(SchemaType.class).orElseThrow()
+                );
                 default -> new ByteArrayProducer(runContext, client, this.serializer);
             };
 

@@ -1,6 +1,7 @@
 package io.kestra.plugin.pulsar;
 
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Duration;
@@ -19,6 +20,5 @@ public interface ReadInterface {
         title = "Deserializer used for the value."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
-    SerdeType getDeserializer();
+    Property<SerdeType> getDeserializer();
 }

@@ -2,6 +2,7 @@ package io.kestra.plugin.pulsar;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.Execution;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.repositories.LocalFlowRepositoryLoader;
@@ -67,7 +68,7 @@ class RealtimeTriggerTest {
             Produce task = Produce.builder()
                 .id(RealtimeTriggerTest.class.getSimpleName())
                 .type(Produce.class.getName())
-                .uri("pulsar://localhost:26650")
+                .uri(Property.of("pulsar://localhost:26650"))
                 .serializer(SerdeType.JSON)
                 .topic("tu_trigger")
                 .from(List.of(

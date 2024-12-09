@@ -1,6 +1,7 @@
 package io.kestra.plugin.pulsar;
 
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
@@ -13,6 +14,5 @@ public interface PollingInterface {
         description = "If no records are available, the maximum wait to wait for a new record. "
     )
     @NotNull
-    @PluginProperty(dynamic = true)
-    Duration getPollDuration();
+    Property<Duration> getPollDuration();
 }

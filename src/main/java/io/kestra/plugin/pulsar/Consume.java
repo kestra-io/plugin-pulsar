@@ -120,8 +120,8 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
         return consumerBuilder;
     }
 
-    public PulsarMessage buildMessage(final Message<byte[]> message) throws Exception {
-        boolean applySchema = this.schemaType != SchemaType.NONE;
+    public PulsarMessage buildMessage(final Message<byte[]> message, RunContext runContext) throws Exception {
+        boolean applySchema = runContext.render(this.schemaType).as(SchemaType.class).orElseThrow() != SchemaType.NONE;
         if (applySchema && this.schemaString == null) {
             throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null");
         }
@@ -132,7 +132,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
                 .properties(message.getProperties())
                 .topic(message.getTopicName());
 
-        builder.value(applySchema ? this.deserializeWithSchema(message.getValue()) : this.getDeserializer().deserialize(message.getValue()));
+        builder.value(applySchema ? this.deserializeWithSchema(message.getValue(), runContext) : runContext.render(this.getDeserializer()).as(SerdeType.class).orElseThrow().deserialize(message.getValue()));
 
         if (message.getEventTime() != 0) {
             builder.eventTime(Instant.ofEpochMilli(message.getEventTime()));

@@ -5,6 +5,7 @@ import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,7 +20,6 @@ import org.apache.pulsar.client.api.SubscriptionType;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -61,17 +61,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 )
 public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerInterface, TriggerOutput<Consume.PulsarMessage>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
     private static final int DEFAULT_RECEIVE_TIMEOUT = 500;
-    
-    private String uri;
 
-    private String authenticationToken;
+    private Property<String> uri;
+
+    private Property<String> authenticationToken;
 
     private AbstractPulsarConnection.TlsOptions tlsOptions;
 
     private Object topic;
 
     @Builder.Default
-    private SerdeType deserializer = SerdeType.STRING;
+    private Property<SerdeType> deserializer = Property.of(SerdeType.STRING);
 
     private String subscriptionName;
 
@@ -91,16 +91,14 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
         title = "JSON string of the topic's schema",
         description = "Required for connecting with topics with a defined schema and strict schema checking"
     )
-    @PluginProperty(dynamic = true)
-    protected String schemaString;
+    protected Property<String> schemaString;
 
     @Schema(
         title = "The schema type of the topic",
         description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
     )
-    @PluginProperty(dynamic = true)
     @Builder.Default
-    protected SchemaType schemaType = SchemaType.NONE;
+    protected Property<SchemaType> schemaType = Property.of(SchemaType.NONE);
 
     @Builder.Default
     @Getter(AccessLevel.NONE)
@@ -144,7 +142,7 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
                             final Message<byte[]> received = consumer.receive(DEFAULT_RECEIVE_TIMEOUT, TimeUnit.MILLISECONDS);
                             if (received != null) {
                                 try {
-                                    emitter.next(task.buildMessage(received));
+                                    emitter.next(task.buildMessage(received, runContext));
                                     consumer.acknowledge(received);
                                 } catch (Exception e) {
                                     consumer.negativeAcknowledge(received);
