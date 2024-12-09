@@ -69,8 +69,8 @@ class TriggerTest {
                     .id(TriggerTest.class.getSimpleName())
                     .type(Produce.class.getName())
                     .uri(Property.of("pulsar://localhost:26650"))
-                    .serializer(SerdeType.JSON)
-                    .topic("tu_trigger")
+                    .serializer(Property.of(SerdeType.JSON))
+                    .topic(Property.of("tu_trigger"))
                     .from(List.of(
                         ImmutableMap.builder()
                             .put("key", "key1")

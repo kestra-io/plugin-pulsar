@@ -69,8 +69,8 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .serializer(SerdeType.JSON)
-            .topic(topic)
+            .serializer(Property.of(SerdeType.JSON))
+            .topic(Property.of(topic))
             .from(uri.toString())
             .build();
 
@@ -107,8 +107,8 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .serializer(SerdeType.JSON)
-            .topic(topic)
+            .serializer(Property.of(SerdeType.JSON))
+            .topic(Property.of(topic))
             .from(uri.toString())
             .build();
 
@@ -142,8 +142,8 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .serializer(SerdeType.JSON)
-            .topic(topic)
+            .serializer(Property.of(SerdeType.JSON))
+            .topic(Property.of(topic))
             .from(ImmutableMap.builder()
                 .put("key", "string")
                 .put("value", Map.of(
@@ -162,7 +162,7 @@ public class PulsarTest {
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
-            .deserializer(Property.of(task.getSerializer()))
+            .deserializer(task.getSerializer())
             .topic(task.getTopic())
             .build();
 
@@ -177,8 +177,8 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .serializer(SerdeType.STRING)
-            .topic(topic)
+            .serializer(Property.of(SerdeType.STRING))
+            .topic(Property.of(topic))
             .from(List.of(
                 ImmutableMap.builder()
                     .put("key", "string")
@@ -208,7 +208,7 @@ public class PulsarTest {
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
-            .deserializer(Property.of(task.getSerializer()))
+            .deserializer(task.getSerializer())
             .topic(List.of(topic))
             .build();
 
@@ -245,7 +245,7 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .topic(topic)
+            .topic(Property.of(topic))
             .from(item)
             .schemaType(Property.of(SchemaType.AVRO))
             .schemaString(Property.of(schemaString))
@@ -257,7 +257,7 @@ public class PulsarTest {
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
-            .deserializer(Property.of(task.getSerializer()))
+            .deserializer(task.getSerializer())
             .topic(task.getTopic())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
@@ -296,7 +296,7 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .topic(topic)
+            .topic(Property.of(topic))
             .from(item)
             .schemaType(Property.of(SchemaType.AVRO))
             .schemaString(Property.of(schemaString))
@@ -308,7 +308,7 @@ public class PulsarTest {
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
-            .deserializer(Property.of(task.getSerializer()))
+            .deserializer(task.getSerializer())
             .topic(task.getTopic())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
@@ -347,7 +347,7 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .topic(topic)
+            .topic(Property.of(topic))
             .from(item)
             .schemaType(Property.of(SchemaType.AVRO))
             .schemaString(Property.of(schemaString))
@@ -359,7 +359,7 @@ public class PulsarTest {
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
-            .deserializer(Property.of(task.getSerializer()))
+            .deserializer(task.getSerializer())
             .topic(task.getTopic())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
@@ -376,7 +376,7 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .topic(topic)
+            .topic(Property.of(topic))
             .from(null)
             .schemaType(Property.of(SchemaType.AVRO))
             .build();
@@ -413,7 +413,7 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .topic(topic)
+            .topic(Property.of(topic))
             .from(item)
             .build();
         assertThrows(IncompatibleSchemaException.class, () -> task.run(runContext));
@@ -448,7 +448,7 @@ public class PulsarTest {
         String incorrectSchemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": \"int\"}}]}";
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .topic(topic)
+            .topic(Property.of(topic))
             .from(item)
             .schemaType(Property.of(SchemaType.AVRO))
             .schemaString(Property.of(incorrectSchemaString))
@@ -484,7 +484,7 @@ public class PulsarTest {
 
         Produce task = Produce.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .topic(topic)
+            .topic(Property.of(topic))
             .from(item)
             .schemaType(Property.of(SchemaType.AVRO))
             .schemaString(Property.of(schemaString))
