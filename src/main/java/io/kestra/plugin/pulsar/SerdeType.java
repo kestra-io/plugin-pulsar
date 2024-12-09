@@ -3,7 +3,6 @@ package io.kestra.plugin.pulsar;
 import io.kestra.core.serializers.JacksonMapper;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 @io.swagger.v3.oas.annotations.media.Schema(

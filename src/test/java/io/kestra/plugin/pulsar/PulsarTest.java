@@ -1,18 +1,17 @@
 package io.kestra.plugin.pulsar;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.FileSerde;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.utils.IdUtils;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
-
 import org.apache.pulsar.client.admin.PulsarAdmin;
-import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.PulsarClientException.IncompatibleSchemaException;
+import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.schema.GenericRecord;
 import org.apache.pulsar.client.api.schema.SchemaDefinition;
 import org.apache.pulsar.shade.org.apache.avro.AvroMissingFieldException;
@@ -22,11 +21,7 @@ import java.io.*;
 import java.net.URI;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -81,7 +76,7 @@ public class PulsarTest {
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(Property.of(SerdeType.JSON))
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .build();
 
         Consume.Output consumeOutput = consume.run(runContext);
@@ -118,7 +113,7 @@ public class PulsarTest {
         Reader reader = Reader.builder()
             .uri(Property.of("pulsar://localhost:26650"))
             .deserializer(Property.of(SerdeType.JSON))
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .build();
 
         Reader.Output consumeOutput = reader.run(runContext);
@@ -163,7 +158,7 @@ public class PulsarTest {
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .build();
 
         Consume.Output consumeOutput = consume.run(runContext);
@@ -258,7 +253,7 @@ public class PulsarTest {
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
             .build();
@@ -309,7 +304,7 @@ public class PulsarTest {
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
             .build();
@@ -360,7 +355,7 @@ public class PulsarTest {
             .uri(Property.of("pulsar://localhost:26650"))
             .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
             .build();

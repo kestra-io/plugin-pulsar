@@ -1,25 +1,20 @@
 package io.kestra.plugin.pulsar;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.FileSerde;
-
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.shade.org.apache.avro.*;
+import org.apache.pulsar.shade.org.apache.avro.Schema;
+import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumReader;
+import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumWriter;
 import org.apache.pulsar.shade.org.apache.avro.io.*;
-import org.apache.pulsar.shade.org.apache.avro.generic.*;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -55,7 +50,6 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
         title = "The maximum duration waiting for new record.",
         description = "It's not a hard limit and is evaluated every second."
     )
-    @PluginProperty
     private Property<Duration> maxDuration;
 
 
