@@ -2,7 +2,10 @@ package io.kestra.plugin.pulsar;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.runners.RunContext;
-import org.apache.pulsar.client.api.*;
+import org.apache.pulsar.client.api.Authentication;
+import org.apache.pulsar.client.api.AuthenticationFactory;
+import org.apache.pulsar.client.api.ClientBuilder;
+import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.auth.AuthenticationTls;
 
 import java.io.IOException;
@@ -20,21 +23,21 @@ public abstract class PulsarService {
 
     public static PulsarClient client(PulsarConnectionInterface pulsarConnectionInterface, RunContext runContext) throws IOException, IllegalVariableEvaluationException {
         ClientBuilder builder = PulsarClient.builder()
-            .serviceUrl(runContext.render(pulsarConnectionInterface.getUri()));
+            .serviceUrl(runContext.render(pulsarConnectionInterface.getUri()).as(String.class).orElseThrow());
 
         if (pulsarConnectionInterface.getAuthenticationToken() != null) {
-            builder.authentication(AuthenticationFactory.token(runContext.render(pulsarConnectionInterface.getAuthenticationToken())));
+            builder.authentication(AuthenticationFactory.token(runContext.render(pulsarConnectionInterface.getAuthenticationToken()).as(String.class).orElseThrow()));
         }
 
         if (pulsarConnectionInterface.getTlsOptions() != null) {
             Map<String, String> authParams = new HashMap<>();
 
             if (pulsarConnectionInterface.getTlsOptions().getCert() != null) {
-                authParams.put("tlsCertFile", PulsarService.decodeBase64(runContext, pulsarConnectionInterface.getTlsOptions().getCert()));
+                authParams.put("tlsCertFile", PulsarService.decodeBase64(runContext, runContext.render(pulsarConnectionInterface.getTlsOptions().getCert()).as(String.class).orElseThrow()));
             }
 
             if (pulsarConnectionInterface.getTlsOptions().getKey() != null) {
-                authParams.put("tlsKeyFile", PulsarService.decodeBase64(runContext, pulsarConnectionInterface.getTlsOptions().getKey()));
+                authParams.put("tlsKeyFile", PulsarService.decodeBase64(runContext, runContext.render(pulsarConnectionInterface.getTlsOptions().getKey()).as(String.class).orElseThrow()));
             }
 
             Authentication tlsAuth = AuthenticationFactory.create(AuthenticationTls.class.getName(), authParams);
@@ -42,7 +45,7 @@ public abstract class PulsarService {
             builder.authentication(tlsAuth);
 
             if (pulsarConnectionInterface.getTlsOptions().getCa() != null) {
-                builder.tlsTrustCertsFilePath(PulsarService.decodeBase64(runContext, pulsarConnectionInterface.getTlsOptions().getCa()));
+                builder.tlsTrustCertsFilePath(PulsarService.decodeBase64(runContext, runContext.render(pulsarConnectionInterface.getTlsOptions().getCa()).as(String.class).orElseThrow()));
             }
         }
 

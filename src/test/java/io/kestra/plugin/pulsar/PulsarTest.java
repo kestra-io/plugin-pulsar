@@ -1,17 +1,17 @@
 package io.kestra.plugin.pulsar;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.FileSerde;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.utils.IdUtils;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
-
 import org.apache.pulsar.client.admin.PulsarAdmin;
-import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.PulsarClientException.IncompatibleSchemaException;
+import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.schema.GenericRecord;
 import org.apache.pulsar.client.api.schema.SchemaDefinition;
 import org.apache.pulsar.shade.org.apache.avro.AvroMissingFieldException;
@@ -21,11 +21,7 @@ import java.io.*;
 import java.net.URI;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -67,9 +63,9 @@ public class PulsarTest {
         URI uri = createInternalStorage();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .serializer(SerdeType.JSON)
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .serializer(Property.of(SerdeType.JSON))
+            .topic(Property.of(topic))
             .from(uri.toString())
             .build();
 
@@ -77,10 +73,10 @@ public class PulsarTest {
         assertThat(runOutput.getMessagesCount(), is(50));
 
         Consume consume = Consume.builder()
-            .uri("pulsar://localhost:26650")
-            .subscriptionName(IdUtils.create())
-            .deserializer(SerdeType.JSON)
-            .topic(task.getTopic())
+            .uri(Property.of("pulsar://localhost:26650"))
+            .subscriptionName(Property.of(IdUtils.create()))
+            .deserializer(Property.of(SerdeType.JSON))
+            .topic(task.getTopic().toString())
             .build();
 
         Consume.Output consumeOutput = consume.run(runContext);
@@ -105,9 +101,9 @@ public class PulsarTest {
         URI uri = createInternalStorage();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .serializer(SerdeType.JSON)
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .serializer(Property.of(SerdeType.JSON))
+            .topic(Property.of(topic))
             .from(uri.toString())
             .build();
 
@@ -115,9 +111,9 @@ public class PulsarTest {
         assertThat(runOutput.getMessagesCount(), is(50));
 
         Reader reader = Reader.builder()
-            .uri("pulsar://localhost:26650")
-            .deserializer(SerdeType.JSON)
-            .topic(task.getTopic())
+            .uri(Property.of("pulsar://localhost:26650"))
+            .deserializer(Property.of(SerdeType.JSON))
+            .topic(task.getTopic().toString())
             .build();
 
         Reader.Output consumeOutput = reader.run(runContext);
@@ -140,9 +136,9 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .serializer(SerdeType.JSON)
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .serializer(Property.of(SerdeType.JSON))
+            .topic(Property.of(topic))
             .from(ImmutableMap.builder()
                 .put("key", "string")
                 .put("value", Map.of(
@@ -159,10 +155,10 @@ public class PulsarTest {
         assertThat(runOutput.getMessagesCount(), is(1));
 
         Consume consume = Consume.builder()
-            .uri("pulsar://localhost:26650")
-            .subscriptionName(IdUtils.create())
+            .uri(Property.of("pulsar://localhost:26650"))
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .build();
 
         Consume.Output consumeOutput = consume.run(runContext);
@@ -175,9 +171,9 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .serializer(SerdeType.STRING)
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .serializer(Property.of(SerdeType.STRING))
+            .topic(Property.of(topic))
             .from(List.of(
                 ImmutableMap.builder()
                     .put("key", "string")
@@ -205,8 +201,8 @@ public class PulsarTest {
         assertThat(runOutput.getMessagesCount(), is(2));
 
         Consume consume = Consume.builder()
-            .uri("pulsar://localhost:26650")
-            .subscriptionName(IdUtils.create())
+            .uri(Property.of("pulsar://localhost:26650"))
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
             .topic(List.of(topic))
             .build();
@@ -221,12 +217,12 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
         String namespace = "public/default";
         String fullTopicName = namespace + "/" + topic;
-        
+
         // Configure the topic to have strict schema rules and set the schema
         PulsarAdmin admin = PulsarAdmin.builder()
             .serviceHttpUrl("http://localhost:28080")
             .build();
-            
+
         admin.namespaces().setIsAllowAutoUpdateSchema(namespace, false);
         admin.topics().createNonPartitionedTopic(fullTopicName);
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
@@ -243,21 +239,21 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .topic(Property.of(topic))
             .from(item)
-            .schemaType(SchemaType.AVRO)
-            .schemaString(schemaString)
+            .schemaType(Property.of(SchemaType.AVRO))
+            .schemaString(Property.of(schemaString))
             .build();
 
         Produce.Output runOutput = task.run(runContext);
         assertThat(runOutput.getMessagesCount(), is(1));
 
         Consume consume = Consume.builder()
-            .uri("pulsar://localhost:26650")
-            .subscriptionName(IdUtils.create())
+            .uri(Property.of("pulsar://localhost:26650"))
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
             .build();
@@ -272,12 +268,12 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
         String namespace = "public/default";
         String fullTopicName = namespace + "/" + topic;
-        
+
         // Configure the topic to have strict schema rules and set the schema
         PulsarAdmin admin = PulsarAdmin.builder()
             .serviceHttpUrl("http://localhost:28080")
             .build();
-            
+
         admin.namespaces().setIsAllowAutoUpdateSchema(namespace, false);
         admin.topics().createNonPartitionedTopic(fullTopicName);
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
@@ -294,21 +290,21 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .topic(Property.of(topic))
             .from(item)
-            .schemaType(SchemaType.AVRO)
-            .schemaString(schemaString)
+            .schemaType(Property.of(SchemaType.AVRO))
+            .schemaString(Property.of(schemaString))
             .build();
 
         Produce.Output runOutput = task.run(runContext);
         assertThat(runOutput.getMessagesCount(), is(1));
 
         Consume consume = Consume.builder()
-            .uri("pulsar://localhost:26650")
-            .subscriptionName(IdUtils.create())
+            .uri(Property.of("pulsar://localhost:26650"))
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
             .build();
@@ -323,12 +319,12 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
         String namespace = "public/default";
         String fullTopicName = namespace + "/" + topic;
-        
+
         // Configure the topic to have strict schema rules and set the schema
         PulsarAdmin admin = PulsarAdmin.builder()
             .serviceHttpUrl("http://localhost:28080")
             .build();
-            
+
         admin.namespaces().setIsAllowAutoUpdateSchema(namespace, false);
         admin.topics().createNonPartitionedTopic(fullTopicName);
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
@@ -345,21 +341,21 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .topic(Property.of(topic))
             .from(item)
-            .schemaType(SchemaType.AVRO)
-            .schemaString(schemaString)
+            .schemaType(Property.of(SchemaType.AVRO))
+            .schemaString(Property.of(schemaString))
             .build();
 
         Produce.Output runOutput = task.run(runContext);
         assertThat(runOutput.getMessagesCount(), is(1));
 
         Consume consume = Consume.builder()
-            .uri("pulsar://localhost:26650")
-            .subscriptionName(IdUtils.create())
+            .uri(Property.of("pulsar://localhost:26650"))
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(task.getSerializer())
-            .topic(task.getTopic())
+            .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
             .schemaString(task.schemaString)
             .build();
@@ -367,17 +363,17 @@ public class PulsarTest {
         Consume.Output consumeOutput = consume.run(runContext);
         assertThat(consumeOutput.getMessagesCount(), is(1));
     }
-  
+
     @Test
     void missingSchemaString() throws Exception {
         RunContext runContext = runContextFactory.of(ImmutableMap.of());
         String topic = "tu_" + IdUtils.create();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .topic(Property.of(topic))
             .from(null)
-            .schemaType(SchemaType.AVRO)
+            .schemaType(Property.of(SchemaType.AVRO))
             .build();
 
         assertThrows(IllegalArgumentException.class, () -> task.run(runContext));
@@ -389,12 +385,12 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
         String namespace = "public/default";
         String fullTopicName = namespace + "/" + topic;
-        
+
         // Configure the topic to have strict schema rules and set the schema
         PulsarAdmin admin = PulsarAdmin.builder()
             .serviceHttpUrl("http://localhost:28080")
             .build();
-            
+
         admin.namespaces().setIsAllowAutoUpdateSchema(namespace, false);
         admin.topics().createNonPartitionedTopic(fullTopicName);
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
@@ -411,8 +407,8 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .topic(Property.of(topic))
             .from(item)
             .build();
         assertThrows(IncompatibleSchemaException.class, () -> task.run(runContext));
@@ -424,12 +420,12 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
         String namespace = "public/default";
         String fullTopicName = namespace + "/" + topic;
-        
+
         // Configure the topic to have strict schema rules and set the schema
         PulsarAdmin admin = PulsarAdmin.builder()
             .serviceHttpUrl("http://localhost:28080")
             .build();
-            
+
         admin.namespaces().setIsAllowAutoUpdateSchema(namespace, false);
         admin.topics().createNonPartitionedTopic(fullTopicName);
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
@@ -443,14 +439,14 @@ public class PulsarTest {
             "array", Arrays.asList(1,2,3)
         ))
         .build();
-        
+
         String incorrectSchemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": \"int\"}}]}";
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .topic(Property.of(topic))
             .from(item)
-            .schemaType(SchemaType.AVRO)
-            .schemaString(incorrectSchemaString)
+            .schemaType(Property.of(SchemaType.AVRO))
+            .schemaString(Property.of(incorrectSchemaString))
             .build();
         assertThrows(IncompatibleSchemaException.class, () -> task.run(runContext));
     }
@@ -461,12 +457,12 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
         String namespace = "public/default";
         String fullTopicName = namespace + "/" + topic;
-        
+
         // Configure the topic to have strict schema rules and set the schema
         PulsarAdmin admin = PulsarAdmin.builder()
             .serviceHttpUrl("http://localhost:28080")
             .build();
-            
+
         admin.namespaces().setIsAllowAutoUpdateSchema(namespace, false);
         admin.topics().createNonPartitionedTopic(fullTopicName);
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
@@ -480,13 +476,13 @@ public class PulsarTest {
             "array", Arrays.asList(1,2,3)
         ))
         .build();
-        
+
         Produce task = Produce.builder()
-            .uri("pulsar://localhost:26650")
-            .topic(topic)
+            .uri(Property.of("pulsar://localhost:26650"))
+            .topic(Property.of(topic))
             .from(item)
-            .schemaType(SchemaType.AVRO)
-            .schemaString(schemaString)
+            .schemaType(Property.of(SchemaType.AVRO))
+            .schemaString(Property.of(schemaString))
             .build();
         assertThrows(AvroMissingFieldException.class, () -> task.run(runContext));
     }

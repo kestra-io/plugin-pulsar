@@ -2,9 +2,9 @@ package io.kestra.plugin.pulsar;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -56,68 +56,64 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @Builder.Default
     private final Duration interval = Duration.ofSeconds(60);
 
-    private String uri;
+    private Property<String> uri;
 
-    private String authenticationToken;
+    private Property<String> authenticationToken;
 
     private AbstractPulsarConnection.TlsOptions tlsOptions;
 
     private Object topic;
 
     @Builder.Default
-    private SerdeType deserializer = SerdeType.STRING;
+    private Property<SerdeType> deserializer = Property.of(SerdeType.STRING);
 
     @Builder.Default
-    private Duration pollDuration = Duration.ofSeconds(2);
+    private Property<Duration> pollDuration = Property.of(Duration.ofSeconds(2));
 
     @io.swagger.v3.oas.annotations.media.Schema(
         title = "The maximum number of records to fetch before stopping.",
         description = "It's not a hard limit and is evaluated every second."
     )
-    @PluginProperty
-    private Integer maxRecords;
+    private Property<Integer> maxRecords;
 
     @io.swagger.v3.oas.annotations.media.Schema(
         title = "The maximum duration waiting for new record.",
         description = "It's not a hard limit and is evaluated every second."
     )
-    @PluginProperty
-    private Duration maxDuration;
+    private Property<Duration> maxDuration;
 
-    private String subscriptionName;
-
-    @Builder.Default
-    private SubscriptionInitialPosition initialPosition = SubscriptionInitialPosition.Earliest;
+    private Property<String> subscriptionName;
 
     @Builder.Default
-    private SubscriptionType subscriptionType = SubscriptionType.Exclusive;
+    private Property<SubscriptionInitialPosition> initialPosition = Property.of(SubscriptionInitialPosition.Earliest);
 
-    private Map<String, String> consumerProperties;
+    @Builder.Default
+    private Property<SubscriptionType> subscriptionType = Property.of(SubscriptionType.Exclusive);
 
-    private String encryptionKey;
+    private Property<Map<String, String>> consumerProperties;
 
-    private String consumerName;
+    private Property<String> encryptionKey;
+
+    private Property<String> consumerName;
 
     @Schema(
         title = "JSON string of the topic's schema",
         description = "Required for connecting with topics with a defined schema and strict schema checking"
     )
-    @PluginProperty(dynamic = true)
-    protected String schemaString;
+    protected Property<String> schemaString;
 
     @Schema(
         title = "The schema type of the topic",
         description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
     )
-    @PluginProperty(dynamic = true)
     @Builder.Default
-    protected SchemaType schemaType = SchemaType.NONE;
+    protected Property<SchemaType> schemaType = Property.of(SchemaType.NONE);
 
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         RunContext runContext = conditionContext.getRunContext();
         Logger logger = runContext.logger();
-        
+
         Consume task = Consume.builder()
             .id(this.id)
             .type(Consume.class.getName())

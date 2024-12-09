@@ -3,6 +3,7 @@ package io.kestra.plugin.pulsar;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.Rethrow;
@@ -47,19 +48,19 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
     }
 )
 public class Consume extends AbstractReader implements RunnableTask<AbstractReader.Output>, SubscriptionInterface {
-    private String subscriptionName;
+    private Property<String> subscriptionName;
 
     @Builder.Default
-    private SubscriptionInitialPosition initialPosition = SubscriptionInitialPosition.Earliest;
+    private Property<SubscriptionInitialPosition> initialPosition = Property.of(SubscriptionInitialPosition.Earliest);
 
     @Builder.Default
-    private SubscriptionType subscriptionType = SubscriptionType.Exclusive;
+    private Property<SubscriptionType> subscriptionType = Property.of(SubscriptionType.Exclusive);
 
-    private Map<String, String> consumerProperties;
+    private Property<Map<String, String>> consumerProperties;
 
-    private String encryptionKey;
+    private Property<String> encryptionKey;
 
-    private String consumerName;
+    private Property<String> consumerName;
 
     @Override
     public AbstractReader.Output run(RunContext runContext) throws Exception {
@@ -94,16 +95,16 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
                                                       final PulsarClient client) throws IllegalVariableEvaluationException {
         ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
             .topics(this.topics(runContext))
-            .subscriptionName(runContext.render(this.subscriptionName))
-            .subscriptionInitialPosition(this.initialPosition)
-            .subscriptionType(this.subscriptionType);
+            .subscriptionName(runContext.render(this.subscriptionName).as(String.class).orElse(null))
+            .subscriptionInitialPosition(runContext.render(this.initialPosition).as(SubscriptionInitialPosition.class).orElseThrow())
+            .subscriptionType(runContext.render(this.subscriptionType).as(SubscriptionType.class).orElseThrow());
 
         if (this.consumerName != null) {
-            consumerBuilder.consumerName(runContext.render(this.consumerName));
+            consumerBuilder.consumerName(runContext.render(this.consumerName).as(String.class).orElseThrow());
         }
 
         if (this.consumerProperties != null) {
-            consumerBuilder.properties(this.consumerProperties
+            consumerBuilder.properties(runContext.render(this.consumerProperties).asMap(String.class, String.class)
                 .entrySet()
                 .stream()
                 .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
@@ -115,13 +116,13 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
         }
 
         if (this.encryptionKey != null) {
-            consumerBuilder.defaultCryptoKeyReader(runContext.render(this.encryptionKey));
+            consumerBuilder.defaultCryptoKeyReader(runContext.render(this.encryptionKey).as(String.class).orElseThrow());
         }
         return consumerBuilder;
     }
 
-    public PulsarMessage buildMessage(final Message<byte[]> message) throws Exception {
-        boolean applySchema = this.schemaType != SchemaType.NONE;
+    public PulsarMessage buildMessage(final Message<byte[]> message, RunContext runContext) throws Exception {
+        boolean applySchema = runContext.render(this.schemaType).as(SchemaType.class).orElseThrow() != SchemaType.NONE;
         if (applySchema && this.schemaString == null) {
             throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null");
         }
@@ -132,7 +133,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
                 .properties(message.getProperties())
                 .topic(message.getTopicName());
 
-        builder.value(applySchema ? this.deserializeWithSchema(message.getValue()) : this.getDeserializer().deserialize(message.getValue()));
+        builder.value(applySchema ? this.deserializeWithSchema(message.getValue(), runContext) : runContext.render(this.getDeserializer()).as(SerdeType.class).orElseThrow().deserialize(message.getValue()));
 
         if (message.getEventTime() != 0) {
             builder.eventTime(Instant.ofEpochMilli(message.getEventTime()));

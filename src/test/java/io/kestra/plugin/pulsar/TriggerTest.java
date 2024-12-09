@@ -1,7 +1,9 @@
 package io.kestra.plugin.pulsar;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.repositories.LocalFlowRepositoryLoader;
@@ -10,10 +12,9 @@ import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.runners.Worker;
 import io.kestra.core.schedulers.AbstractScheduler;
 import io.kestra.core.utils.IdUtils;
-import io.kestra.jdbc.runner.JdbcScheduler;
 import io.kestra.core.utils.TestsUtils;
+import io.kestra.jdbc.runner.JdbcScheduler;
 import io.micronaut.context.ApplicationContext;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
@@ -67,9 +68,9 @@ class TriggerTest {
                 Produce task = Produce.builder()
                     .id(TriggerTest.class.getSimpleName())
                     .type(Produce.class.getName())
-                    .uri("pulsar://localhost:26650")
-                    .serializer(SerdeType.JSON)
-                    .topic("tu_trigger")
+                    .uri(Property.of("pulsar://localhost:26650"))
+                    .serializer(Property.of(SerdeType.JSON))
+                    .topic(Property.of("tu_trigger"))
                     .from(List.of(
                         ImmutableMap.builder()
                             .put("key", "key1")

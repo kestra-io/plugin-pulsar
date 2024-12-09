@@ -2,7 +2,7 @@ package io.kestra.plugin.pulsar;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.Rethrow;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -53,16 +53,14 @@ public class Reader extends AbstractReader {
             "`since` set to 5 minutes (`PT5M`) indicates that broker should find message published 5 minutes in the past, " +
             "and set the initial position to that messageId."
     )
-    @PluginProperty(dynamic = true)
-    private Duration since;
+    private Property<Duration> since;
 
     @Schema(
         title = "Position the reader on a particular message.",
         description = "The first message read will be the one immediately *after* the specified message.\n" +
             "If no `since` or `messageId` are provided, we start at the beginning of the topic."
     )
-    @PluginProperty(dynamic = true)
-    private String messageId;
+    private Property<String> messageId;
 
     @Override
     public AbstractReader.Output run(RunContext runContext) throws Exception {
@@ -70,10 +68,11 @@ public class Reader extends AbstractReader {
             org.apache.pulsar.client.api.ReaderBuilder<byte[]> readerBuilder = client.newReader()
                 .topics(this.topics(runContext));
 
-            if (this.since != null) {
-                readerBuilder.startMessageFromRollbackDuration(this.since.getNano(), TimeUnit.NANOSECONDS);
+            var duration = runContext.render(this.since).as(Duration.class);
+            if (duration.isPresent()) {
+                readerBuilder.startMessageFromRollbackDuration(duration.get().getNano(), TimeUnit.NANOSECONDS);
             } else if (this.messageId != null) {
-                readerBuilder.startMessageId(MessageId.fromByteArray(runContext.render(this.messageId).getBytes(StandardCharsets.UTF_8)));
+                readerBuilder.startMessageId(MessageId.fromByteArray(runContext.render(this.messageId).as(String.class).orElseThrow().getBytes(StandardCharsets.UTF_8)));
             } else {
                 readerBuilder.startMessageId(MessageId.earliest);
             }
@@ -82,7 +81,7 @@ public class Reader extends AbstractReader {
                 return this.read(
                     runContext,
                     Rethrow.throwSupplier(() -> {
-                        Message<byte[]> message = reader.readNext(this.getPollDuration().getNano(), TimeUnit.NANOSECONDS);
+                        Message<byte[]> message = reader.readNext(runContext.render(this.getPollDuration()).as(Duration.class).orElseThrow().getNano(), TimeUnit.NANOSECONDS);
 
                         if (message == null) {
                             return List.of();
