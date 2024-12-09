@@ -79,7 +79,7 @@ public class PulsarTest {
 
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(IdUtils.create())
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(Property.of(SerdeType.JSON))
             .topic(task.getTopic())
             .build();
@@ -161,7 +161,7 @@ public class PulsarTest {
 
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(IdUtils.create())
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(Property.of(task.getSerializer()))
             .topic(task.getTopic())
             .build();
@@ -207,7 +207,7 @@ public class PulsarTest {
 
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(IdUtils.create())
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(Property.of(task.getSerializer()))
             .topic(List.of(topic))
             .build();
@@ -256,7 +256,7 @@ public class PulsarTest {
 
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(IdUtils.create())
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(Property.of(task.getSerializer()))
             .topic(task.getTopic())
             .schemaType(task.schemaType)
@@ -307,7 +307,7 @@ public class PulsarTest {
 
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(IdUtils.create())
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(Property.of(task.getSerializer()))
             .topic(task.getTopic())
             .schemaType(task.schemaType)
@@ -358,7 +358,7 @@ public class PulsarTest {
 
         Consume consume = Consume.builder()
             .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(IdUtils.create())
+            .subscriptionName(Property.of(IdUtils.create()))
             .deserializer(Property.of(task.getSerializer()))
             .topic(task.getTopic())
             .schemaType(task.schemaType)

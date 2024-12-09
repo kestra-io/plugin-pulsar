@@ -73,19 +73,19 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
     @Builder.Default
     private Property<SerdeType> deserializer = Property.of(SerdeType.STRING);
 
-    private String subscriptionName;
+    private Property<String> subscriptionName;
 
     @Builder.Default
-    private SubscriptionInitialPosition initialPosition = SubscriptionInitialPosition.Earliest;
+    private Property<SubscriptionInitialPosition> initialPosition = Property.of(SubscriptionInitialPosition.Earliest);
 
     @Builder.Default
-    private SubscriptionType subscriptionType = SubscriptionType.Exclusive;
+    private Property<SubscriptionType> subscriptionType = Property.of(SubscriptionType.Exclusive);
 
-    private Map<String, String> consumerProperties;
+    private Property<Map<String, String>> consumerProperties;
 
-    private String encryptionKey;
+    private Property<String> encryptionKey;
 
-    private String consumerName;
+    private Property<String> consumerName;
 
     @Schema(
         title = "JSON string of the topic's schema",

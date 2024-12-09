@@ -30,16 +30,16 @@ import jakarta.validation.constraints.NotNull;
             code = """
                 id: produce
                 namespace: company.team
-                
+
                 inputs:
                   - type: FILE
                     id: file
-                
+
                 tasks:
                   - id: csv_reader
                     type: io.kestra.plugin.serdes.csv.CsvToIon
                     from: "{{ inputs.file }}"
-                
+
                   - id: file_transform
                     type: io.kestra.plugin.scripts.nashorn.FileTransform
                     from: {{ outputs.csv_reader.uri }}"
@@ -56,7 +56,7 @@ import jakarta.validation.constraints.NotNull;
                         }
                       };
                       row = result
-                
+
                   - id: produce
                     type: io.kestra.plugin.pulsar.Produce
                     from: "{{ outputs.file_transform.uri }}"
@@ -134,12 +134,12 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     private CompressionType compressionType;
 
     @Override
-    public Output run(RunContext runContext) throws Exception {        
+    public Output run(RunContext runContext) throws Exception {
         try (PulsarClient client = PulsarService.client(this, runContext)) {
             AbstractProducer<?> producer = switch (runContext.render(this.schemaType).as(SchemaType.class).orElseThrow()) {
                 case AVRO, JSON -> new GenericRecordProducer(
-                    runContext, 
-                    client, 
+                    runContext,
+                    client,
                     runContext.render(this.schemaString).as(String.class).orElse(null),
                     runContext.render(this.schemaType).as(SchemaType.class).orElseThrow()
                 );
