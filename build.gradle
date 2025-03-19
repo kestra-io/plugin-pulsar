@@ -54,7 +54,7 @@ dependencies {
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
 
     // libs included in the final jar
-    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.0.1') {
+    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.0.3') {
         exclude group: 'com.fasterxml.jackson.core'
     }
 }
