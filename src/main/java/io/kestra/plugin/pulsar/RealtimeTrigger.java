@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Consume a message in real-time from Pulsar topics and create one execution per message.",
+    title = "Trigger a flow on message consumption in real-time from Pulsar topics.",
     description = "If you would like to consume multiple messages processed within a given time frame and process them in batch, you can use the [io.kestra.plugin.pulsar.Trigger](https://kestra.io/plugins/plugin-pulsar/triggers/io.kestra.plugin.pulsar.trigger) instead."
 )
 @Plugin(

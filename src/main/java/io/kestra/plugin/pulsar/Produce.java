@@ -22,7 +22,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @io.swagger.v3.oas.annotations.media.Schema(
-    title = "Produce message to a Pulsar topic."
+    title = "Produce a message in a Pulsar topic."
 )
 @Plugin(
     examples = {

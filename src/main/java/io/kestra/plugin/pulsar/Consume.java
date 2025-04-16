@@ -26,7 +26,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Consume messages from Pulsar topic(s)."
+    title = "Consume a messages from Pulsar topic(s)."
 )
 @Plugin(
     examples = {
