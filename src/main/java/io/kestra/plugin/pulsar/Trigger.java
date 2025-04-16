@@ -24,7 +24,7 @@ import java.util.Optional;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Consume messages periodically from Pulsar topics and create one execution per batch.",
+    title = "Trigger a flow on periodic message consumption in real-time from Pulsar topics.",
     description = "Note that you don't need an extra task to consume the message from the event trigger. The trigger will automatically consume messages and you can retrieve their content in your flow using the `{{ trigger.uri }}` variable. If you would like to consume each message from a Pulsar topic in real-time and create one execution per message, you can use the [io.kestra.plugin.pulsar.RealtimeTrigger](https://kestra.io/plugins/plugin-pulsar/triggers/io.kestra.plugin.pulsar.realtimetrigger) instead."
 )
 @Plugin(
