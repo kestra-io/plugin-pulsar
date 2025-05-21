@@ -65,7 +65,7 @@ import java.util.Map;
                     uri: pulsar://localhost:26650
                     serializer: JSON
                     topic: test_kestra
-            """
+                """
         )
     }
 )
