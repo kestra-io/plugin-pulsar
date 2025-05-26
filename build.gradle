@@ -54,7 +54,7 @@ dependencies {
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
 
     // libs included in the final jar
-    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.0.3') {
+    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.0.5') {
         exclude group: 'com.fasterxml.jackson.core'
     }
 }
@@ -91,7 +91,7 @@ dependencies {
     testImplementation "io.micronaut.test:micronaut-test-junit5"
     testImplementation "io.micronaut.reactor:micronaut-reactor"
 
-    testImplementation(group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '4.0.3') {
+    testImplementation(group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '4.0.5') {
         exclude group: 'com.fasterxml.jackson.core'
     }
 
