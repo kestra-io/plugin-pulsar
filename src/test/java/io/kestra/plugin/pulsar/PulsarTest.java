@@ -64,9 +64,9 @@ public class PulsarTest {
         URI uri = createInternalStorage();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .serializer(Property.of(SerdeType.JSON))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .serializer(Property.ofValue(SerdeType.JSON))
+            .topic(Property.ofValue(topic))
             .from(uri.toString())
             .build();
 
@@ -74,9 +74,9 @@ public class PulsarTest {
         assertThat(runOutput.getMessagesCount(), is(50));
 
         Consume consume = Consume.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(Property.of(IdUtils.create()))
-            .deserializer(Property.of(SerdeType.JSON))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .subscriptionName(Property.ofValue(IdUtils.create()))
+            .deserializer(Property.ofValue(SerdeType.JSON))
             .topic(task.getTopic().toString())
             .build();
 
@@ -102,9 +102,9 @@ public class PulsarTest {
         URI uri = createInternalStorage();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .serializer(Property.of(SerdeType.JSON))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .serializer(Property.ofValue(SerdeType.JSON))
+            .topic(Property.ofValue(topic))
             .from(uri.toString())
             .build();
 
@@ -112,8 +112,8 @@ public class PulsarTest {
         assertThat(runOutput.getMessagesCount(), is(50));
 
         Reader reader = Reader.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .deserializer(Property.of(SerdeType.JSON))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .deserializer(Property.ofValue(SerdeType.JSON))
             .topic(task.getTopic().toString())
             .build();
 
@@ -137,9 +137,9 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .serializer(Property.of(SerdeType.JSON))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .serializer(Property.ofValue(SerdeType.JSON))
+            .topic(Property.ofValue(topic))
             .from(ImmutableMap.builder()
                 .put("key", "string")
                 .put("value", Map.of(
@@ -156,8 +156,8 @@ public class PulsarTest {
         assertThat(runOutput.getMessagesCount(), is(1));
 
         Consume consume = Consume.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(Property.of(IdUtils.create()))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .subscriptionName(Property.ofValue(IdUtils.create()))
             .deserializer(task.getSerializer())
             .topic(task.getTopic().toString())
             .build();
@@ -172,9 +172,9 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .serializer(Property.of(SerdeType.STRING))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .serializer(Property.ofValue(SerdeType.STRING))
+            .topic(Property.ofValue(topic))
             .from(List.of(
                 ImmutableMap.builder()
                     .put("key", "string")
@@ -202,8 +202,8 @@ public class PulsarTest {
         assertThat(runOutput.getMessagesCount(), is(2));
 
         Consume consume = Consume.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(Property.of(IdUtils.create()))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .subscriptionName(Property.ofValue(IdUtils.create()))
             .deserializer(task.getSerializer())
             .topic(List.of(topic))
             .build();
@@ -240,19 +240,19 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .topic(Property.ofValue(topic))
             .from(item)
-            .schemaType(Property.of(SchemaType.AVRO))
-            .schemaString(Property.of(schemaString))
+            .schemaType(Property.ofValue(SchemaType.AVRO))
+            .schemaString(Property.ofValue(schemaString))
             .build();
 
         Produce.Output runOutput = task.run(runContext);
         assertThat(runOutput.getMessagesCount(), is(1));
 
         Consume consume = Consume.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(Property.of(IdUtils.create()))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .subscriptionName(Property.ofValue(IdUtils.create()))
             .deserializer(task.getSerializer())
             .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
@@ -291,19 +291,19 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .topic(Property.ofValue(topic))
             .from(item)
-            .schemaType(Property.of(SchemaType.AVRO))
-            .schemaString(Property.of(schemaString))
+            .schemaType(Property.ofValue(SchemaType.AVRO))
+            .schemaString(Property.ofValue(schemaString))
             .build();
 
         Produce.Output runOutput = task.run(runContext);
         assertThat(runOutput.getMessagesCount(), is(1));
 
         Consume consume = Consume.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(Property.of(IdUtils.create()))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .subscriptionName(Property.ofValue(IdUtils.create()))
             .deserializer(task.getSerializer())
             .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
@@ -342,19 +342,19 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .topic(Property.ofValue(topic))
             .from(item)
-            .schemaType(Property.of(SchemaType.AVRO))
-            .schemaString(Property.of(schemaString))
+            .schemaType(Property.ofValue(SchemaType.AVRO))
+            .schemaString(Property.ofValue(schemaString))
             .build();
 
         Produce.Output runOutput = task.run(runContext);
         assertThat(runOutput.getMessagesCount(), is(1));
 
         Consume consume = Consume.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .subscriptionName(Property.of(IdUtils.create()))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .subscriptionName(Property.ofValue(IdUtils.create()))
             .deserializer(task.getSerializer())
             .topic(task.getTopic().toString())
             .schemaType(task.schemaType)
@@ -371,10 +371,10 @@ public class PulsarTest {
         String topic = "tu_" + IdUtils.create();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .topic(Property.ofValue(topic))
             .from(null)
-            .schemaType(Property.of(SchemaType.AVRO))
+            .schemaType(Property.ofValue(SchemaType.AVRO))
             .build();
 
         assertThrows(IllegalArgumentException.class, () -> task.run(runContext));
@@ -408,8 +408,8 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .topic(Property.ofValue(topic))
             .from(item)
             .build();
         assertThrows(IncompatibleSchemaException.class, () -> task.run(runContext));
@@ -443,11 +443,11 @@ public class PulsarTest {
 
         String incorrectSchemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": \"int\"}}]}";
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .topic(Property.ofValue(topic))
             .from(item)
-            .schemaType(Property.of(SchemaType.AVRO))
-            .schemaString(Property.of(incorrectSchemaString))
+            .schemaType(Property.ofValue(SchemaType.AVRO))
+            .schemaString(Property.ofValue(incorrectSchemaString))
             .build();
         assertThrows(IncompatibleSchemaException.class, () -> task.run(runContext));
     }
@@ -479,11 +479,11 @@ public class PulsarTest {
         .build();
 
         Produce task = Produce.builder()
-            .uri(Property.of("pulsar://localhost:26650"))
-            .topic(Property.of(topic))
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .topic(Property.ofValue(topic))
             .from(item)
-            .schemaType(Property.of(SchemaType.AVRO))
-            .schemaString(Property.of(schemaString))
+            .schemaType(Property.ofValue(SchemaType.AVRO))
+            .schemaString(Property.ofValue(schemaString))
             .build();
         assertThrows(AvroMissingFieldException.class, () -> task.run(runContext));
     }

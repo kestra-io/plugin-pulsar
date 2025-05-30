@@ -91,7 +91,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     )
     @NotNull
     @Builder.Default
-    private Property<SerdeType> serializer = Property.of(SerdeType.STRING);
+    private Property<SerdeType> serializer = Property.ofValue(SerdeType.STRING);
 
     @io.swagger.v3.oas.annotations.media.Schema(
         title = "Specify a name for the producer."

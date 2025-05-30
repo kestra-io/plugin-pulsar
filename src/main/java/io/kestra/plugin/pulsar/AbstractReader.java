@@ -35,10 +35,10 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     private Object topic;
 
     @Builder.Default
-    private Property<SerdeType> deserializer = Property.of(SerdeType.STRING);
+    private Property<SerdeType> deserializer = Property.ofValue(SerdeType.STRING);
 
     @Builder.Default
-    private Property<Duration> pollDuration = Property.of(Duration.ofSeconds(2));
+    private Property<Duration> pollDuration = Property.ofValue(Duration.ofSeconds(2));
 
     @io.swagger.v3.oas.annotations.media.Schema(
         title = "The maximum number of records to fetch before stopping.",

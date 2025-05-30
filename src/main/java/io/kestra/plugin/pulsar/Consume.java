@@ -51,10 +51,10 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
     private Property<String> subscriptionName;
 
     @Builder.Default
-    private Property<SubscriptionInitialPosition> initialPosition = Property.of(SubscriptionInitialPosition.Earliest);
+    private Property<SubscriptionInitialPosition> initialPosition = Property.ofValue(SubscriptionInitialPosition.Earliest);
 
     @Builder.Default
-    private Property<SubscriptionType> subscriptionType = Property.of(SubscriptionType.Exclusive);
+    private Property<SubscriptionType> subscriptionType = Property.ofValue(SubscriptionType.Exclusive);
 
     private Property<Map<String, String>> consumerProperties;
 
