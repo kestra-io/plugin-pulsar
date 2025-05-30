@@ -65,10 +65,10 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     private Object topic;
 
     @Builder.Default
-    private Property<SerdeType> deserializer = Property.of(SerdeType.STRING);
+    private Property<SerdeType> deserializer = Property.ofValue(SerdeType.STRING);
 
     @Builder.Default
-    private Property<Duration> pollDuration = Property.of(Duration.ofSeconds(2));
+    private Property<Duration> pollDuration = Property.ofValue(Duration.ofSeconds(2));
 
     @io.swagger.v3.oas.annotations.media.Schema(
         title = "The maximum number of records to fetch before stopping.",
@@ -85,10 +85,10 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     private Property<String> subscriptionName;
 
     @Builder.Default
-    private Property<SubscriptionInitialPosition> initialPosition = Property.of(SubscriptionInitialPosition.Earliest);
+    private Property<SubscriptionInitialPosition> initialPosition = Property.ofValue(SubscriptionInitialPosition.Earliest);
 
     @Builder.Default
-    private Property<SubscriptionType> subscriptionType = Property.of(SubscriptionType.Exclusive);
+    private Property<SubscriptionType> subscriptionType = Property.ofValue(SubscriptionType.Exclusive);
 
     private Property<Map<String, String>> consumerProperties;
 
@@ -107,7 +107,7 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
         description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
     )
     @Builder.Default
-    protected Property<SchemaType> schemaType = Property.of(SchemaType.NONE);
+    protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
 
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {

@@ -65,15 +65,15 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
     private Object topic;
 
     @Builder.Default
-    private Property<SerdeType> deserializer = Property.of(SerdeType.STRING);
+    private Property<SerdeType> deserializer = Property.ofValue(SerdeType.STRING);
 
     private Property<String> subscriptionName;
 
     @Builder.Default
-    private Property<SubscriptionInitialPosition> initialPosition = Property.of(SubscriptionInitialPosition.Earliest);
+    private Property<SubscriptionInitialPosition> initialPosition = Property.ofValue(SubscriptionInitialPosition.Earliest);
 
     @Builder.Default
-    private Property<SubscriptionType> subscriptionType = Property.of(SubscriptionType.Exclusive);
+    private Property<SubscriptionType> subscriptionType = Property.ofValue(SubscriptionType.Exclusive);
 
     private Property<Map<String, String>> consumerProperties;
 
@@ -92,7 +92,7 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
         description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
     )
     @Builder.Default
-    protected Property<SchemaType> schemaType = Property.of(SchemaType.NONE);
+    protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
 
     @Builder.Default
     @Getter(AccessLevel.NONE)
