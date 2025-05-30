@@ -29,7 +29,7 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
       description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
     )
     @Builder.Default
-    protected Property<SchemaType> schemaType = Property.of(SchemaType.NONE);
+    protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
 
     @Value
     public static class TlsOptions {

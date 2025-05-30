@@ -69,9 +69,9 @@ class RealtimeTriggerTest {
             Produce task = Produce.builder()
                 .id(RealtimeTriggerTest.class.getSimpleName())
                 .type(Produce.class.getName())
-                .uri(Property.of("pulsar://localhost:26650"))
-                .serializer(Property.of(SerdeType.JSON))
-                .topic(Property.of("tu_trigger"))
+                .uri(Property.ofValue("pulsar://localhost:26650"))
+                .serializer(Property.ofValue(SerdeType.JSON))
+                .topic(Property.ofValue("tu_trigger"))
                 .from(List.of(
                     ImmutableMap.builder()
                         .put("key", "key1")
