@@ -1,6 +1,8 @@
 package io.kestra.plugin.pulsar;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.Metric;
 import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
@@ -25,6 +27,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+
+@Plugin(
+    examples = {
+        @io.kestra.core.models.annotations.Example(
+            title = "Consume messages from a Pulsar topic",
+            full = true,
+            code = """
+                id: pulsar_read
+                namespace: company.team
+                tasks:
+                  - id: read
+                    type: io.kestra.plugin.pulsar.ReaderTask
+                    topic: my-topic
+                    deserializer: STRING
+                    maxRecords: 10
+                """
+        )
+    },
+    metrics = {
+        @Metric(
+            name = "records",
+            type = Counter.TYPE,
+            description = "The total number of records consumed from Pulsar."
+        )
+        // @Metric(
+        //     name = "records.total",
+        //     type = Counter.TYPE,
+        //     description = "The total number of records consumed across all topics."
+        // )
+    }
+)
 
 @SuperBuilder
 @ToString
@@ -91,6 +124,8 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
 
             count
                 .forEach((s, integer) -> runContext.metric(Counter.of("records", integer, "topic", s)));
+            
+            //runContext.metric(Counter.of("records.total",count.values().stream().mapToInt(Integer::intValue).sum()));
 
             return Output.builder()
                 .messagesCount(count.values().stream().mapToInt(Integer::intValue).sum())
