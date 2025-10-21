@@ -2,6 +2,9 @@ package io.kestra.plugin.pulsar;
 
 import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.models.annotations.Metric;
+import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.executions.metrics.Timer;
 import io.kestra.core.serializers.FileSerde;
 import org.apache.pulsar.client.api.*;
 import reactor.core.publisher.Flux;
@@ -21,6 +24,41 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
+
+@Plugin(
+    examples = {
+        @io.kestra.core.models.annotations.Example(
+            title = "Produce messages to a Pulsar topic",
+            full = true,
+            code = """
+                id: pulsar_produce
+                namespace: company.team
+
+                tasks:
+                  - id: produce
+                    type: io.kestra.plugin.pulsar.ProducerTask
+                    topic: my-topic
+                    messages:
+                      - key: "key1"
+                        value: "Hello"
+                      - key: "key2"
+                        value: "World"
+                """
+        )
+    },
+    metrics = {
+        @Metric(
+            name = "records",
+            type = Counter.TYPE,
+            description = "The total number of records produced to Pulsar."
+        ),
+        @Metric(
+            name = "produce.duration",
+            type = Timer.TYPE,
+            description = "The duration in milliseconds to produce messages to Pulsar."
+        )
+    }
+)
 
 public abstract class AbstractProducer<T> {
 
@@ -82,7 +120,7 @@ public abstract class AbstractProducer<T> {
     @SuppressWarnings("unchecked")
     public int produceMessage(Object from) throws Exception {
         Integer count = 1;
-
+        long start = System.currentTimeMillis();
         if (from instanceof String || from instanceof List) {
             Flux<Object> flowable;
             Flux<Integer> resultFlowable;
@@ -107,7 +145,7 @@ public abstract class AbstractProducer<T> {
         this.runContext.metric(Counter.of("records", count));
 
         this.producer.flush();
-
+        this.runContext.metric(Timer.of("produce.duration", System.currentTimeMillis() - start));
         return count;
     }
 
