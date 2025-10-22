@@ -29,22 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 @Plugin(
-    examples = {
-        @io.kestra.core.models.annotations.Example(
-            title = "Consume messages from a Pulsar topic",
-            full = true,
-            code = """
-                id: pulsar_read
-                namespace: company.team
-                tasks:
-                  - id: read
-                    type: io.kestra.plugin.pulsar.ReaderTask
-                    topic: my-topic
-                    deserializer: STRING
-                    maxRecords: 10
-                """
-        )
-    },
     metrics = {
         @Metric(
             name = "reader.records",
@@ -125,7 +109,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
             count
                 .forEach((s, integer) -> runContext.metric(Counter.of("reader.records", integer, "topic", s)));
             
-            //runContext.metric(Counter.of("records.total",count.values().stream().mapToInt(Integer::intValue).sum()));
+            runContext.metric(Counter.of("records.total",count.values().stream().mapToInt(Integer::intValue).sum()));
 
             return Output.builder()
                 .messagesCount(count.values().stream().mapToInt(Integer::intValue).sum())
