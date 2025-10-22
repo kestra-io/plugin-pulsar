@@ -125,7 +125,7 @@ public abstract class AbstractProducer<T> {
         this.runContext.metric(Counter.of("produce.records.count", count));
 
         this.producer.flush();
-        this.runContext.metric(Timer.of("produce.duration", System.currentTimeMillis() - start));
+        this.runContext.metric(Timer.of("produce.duration", java.time.Duration.ofMillis(System.currentTimeMillis() - start)));
         return count;
     }
 
