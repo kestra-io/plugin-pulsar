@@ -47,7 +47,7 @@ import java.util.function.Supplier;
     },
     metrics = {
         @Metric(
-            name = "records",
+            name = "reader.records",
             type = Counter.TYPE,
             description = "The total number of records consumed from Pulsar."
         )
