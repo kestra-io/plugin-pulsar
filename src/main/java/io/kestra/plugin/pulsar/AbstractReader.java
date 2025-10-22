@@ -50,12 +50,12 @@ import java.util.function.Supplier;
             name = "reader.records",
             type = Counter.TYPE,
             description = "The total number of records consumed from Pulsar."
+        ),
+        @Metric(
+            name = "records.total",
+            type = Counter.TYPE,
+            description = "The total number of records consumed across all topics."
         )
-        // @Metric(
-        //     name = "records.total",
-        //     type = Counter.TYPE,
-        //     description = "The total number of records consumed across all topics."
-        // )
     }
 )
 
