@@ -123,7 +123,7 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
             output.flush();
 
             count
-                .forEach((s, integer) -> runContext.metric(Counter.of("records", integer, "topic", s)));
+                .forEach((s, integer) -> runContext.metric(Counter.of("reader.records", integer, "topic", s)));
             
             //runContext.metric(Counter.of("records.total",count.values().stream().mapToInt(Integer::intValue).sum()));
 
