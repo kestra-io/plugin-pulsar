@@ -48,7 +48,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
     },
     metrics = {
         @Metric(
-            name = "records",
+            name = "produce.records.count",
             type = Counter.TYPE,
             description = "The total number of records produced to Pulsar."
         ),
