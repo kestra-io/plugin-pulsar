@@ -142,7 +142,7 @@ public abstract class AbstractProducer<T> {
             this.produceMessage((Map<String, Object>) from);
         }
 
-        this.runContext.metric(Counter.of("records", count));
+        this.runContext.metric(Counter.of("produce.records.count", count));
 
         this.producer.flush();
         this.runContext.metric(Timer.of("produce.duration", System.currentTimeMillis() - start));
