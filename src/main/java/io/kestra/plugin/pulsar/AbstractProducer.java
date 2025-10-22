@@ -26,26 +26,6 @@ import java.util.stream.Collectors;
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
 @Plugin(
-    examples = {
-        @io.kestra.core.models.annotations.Example(
-            title = "Produce messages to a Pulsar topic",
-            full = true,
-            code = """
-                id: pulsar_produce
-                namespace: company.team
-
-                tasks:
-                  - id: produce
-                    type: io.kestra.plugin.pulsar.ProducerTask
-                    topic: my-topic
-                    messages:
-                      - key: "key1"
-                        value: "Hello"
-                      - key: "key2"
-                        value: "World"
-                """
-        )
-    },
     metrics = {
         @Metric(
             name = "produce.records.count",
