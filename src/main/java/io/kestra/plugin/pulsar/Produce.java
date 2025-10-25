@@ -1,167 +1,165 @@
 package io.kestra.plugin.pulsar;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.models.property.Property;
+import io.kestra.core.models.data.Data;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.serializers.FileSerde;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.pulsar.client.api.CompressionType;
-import org.apache.pulsar.client.api.ProducerAccessMode;
+import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.Schema as PulsarSchema;
+import reactor.core.publisher.Flux;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
+import static io.kestra.core.utils.Rethrow.throwFunction;
 
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@io.swagger.v3.oas.annotations.media.Schema(
-    title = "Produce a message in a Pulsar topic."
+@Schema(
+    title = "Produce messages to a Pulsar topic."
 )
 @Plugin(
     examples = {
         @Example(
-            title = "Read a CSV file, transform it to the right format, and publish it to Pulsar topic.",
+            title = "Produce a single message to Pulsar topic `kestra.publish`.",
             full = true,
             code = """
-                id: produce
+                id: pulsar_produce_single
                 namespace: company.team
 
-                inputs:
-                  - type: FILE
-                    id: file
-
                 tasks:
-                  - id: csv_reader
-                    type: io.kestra.plugin.serdes.csv.CsvToIon
-                    from: "{{ inputs.file }}"
-
-                  - id: file_transform
-                    type: io.kestra.plugin.scripts.nashorn.FileTransform
-                    from: {{ outputs.csv_reader.uri }}"
-                    script: |
-                      var result = {
-                        "key": row.id,
-                        "value": {
-                          "username": row.username,
-                          "tweet": row.tweet
-                        },
-                        "eventTime": row.timestamp,
-                        "properties": {
-                          "key": "value"
-                        }
-                      };
-                      row = result
-
                   - id: produce
                     type: io.kestra.plugin.pulsar.Produce
-                    from: "{{ outputs.file_transform.uri }}"
-                    uri: pulsar://localhost:26650
-                    serializer: JSON
-                    topic: test_kestra
+                    serviceUrl: pulsar://localhost:6650
+                    topic: kestra.publish
+                    from:
+                      data: "Hello Pulsar!"
+                """
+        ),
+        @Example(
+            title = "Produce multiple messages to Pulsar.",
+            full = true,
+            code = """
+                id: pulsar_produce_multiple
+                namespace: company.team
+
+                tasks:
+                  - id: produce
+                    type: io.kestra.plugin.pulsar.Produce
+                    serviceUrl: pulsar://localhost:6650
+                    topic: kestra.publish
+                    from:
+                      - data: "Message 1"
+                      - data: "Message 2"
+                """
+        ),
+        @Example(
+            title = "Produce messages from Kestra internal storage file to Pulsar topic.",
+            full = true,
+            code = """
+                id: pulsar_produce_from_file
+                namespace: company.team
+
+                tasks:
+                  - id: produce
+                    type: io.kestra.plugin.pulsar.Produce
+                    serviceUrl: pulsar://localhost:6650
+                    topic: kestra.publish
+                    from: "{{ outputs.some_task_with_output_file.uri }}"
                 """
         )
     }
 )
-public class Produce extends AbstractPulsarConnection implements RunnableTask<Produce.Output> {
-    @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Pulsar topic to send a message to."
-    )
-    @NotNull
-    private Property<String> topic;
+public class Produce extends PulsarConnection implements RunnableTask<Produce.Output> {
 
-    @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Source of the sent message.",
-        description = "Can be a Kestra internal storage URI, a map or a list " +
-            "in the following format: `key`, `value`, `eventTime`, `properties`, " +
-            "`deliverAt`, `deliverAfter` and `sequenceId`."
+    @Schema(
+        title = "Topic to produce messages to."
     )
-    @NotNull
     @PluginProperty(dynamic = true)
-    private Object from;
+    @NotBlank
+    private String topic;
 
-    @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Serializer used for the value."
+    @Schema(
+        title = Data.From.TITLE,
+        description = Data.From.DESCRIPTION,
+        anyOf = {String.class, List.class, Map.class}
     )
+    @PluginProperty(dynamic = true, internalStorageURI = true)
     @NotNull
-    @Builder.Default
-    private Property<SerdeType> serializer = Property.ofValue(SerdeType.STRING);
-
-    @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Specify a name for the producer."
-    )
-    private Property<String> producerName;
-
-    @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Add all the properties in the provided map to the producer."
-    )
-    private Property<Map<String, String>> producerProperties;
-
-    @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Configure the type of access mode that the producer requires on the topic.",
-        description = "Possible values are:\n" +
-            "* `Shared`: By default, multiple producers can publish to a topic.\n" +
-            "* `Exclusive`: Require exclusive access for producer. Fail immediately if there's already a producer connected.\n" +
-            "* `WaitForExclusive`: Producer creation is pending until it can acquire exclusive access."
-    )
-    private Property<ProducerAccessMode> accessMode;
-
-    @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Add public encryption key, used by producer to encrypt the data key."
-    )
-    private Property<String> encryptionKey;
-
-    @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Set the compression type for the producer.",
-        description = "By default, message payloads are not compressed. Supported compression types are:\n" +
-            "* `NONE`: No compression (Default).\n" +
-            "* `LZ4`: Compress with LZ4 algorithm. Faster but lower compression than ZLib.\n" +
-            "* `ZLIB`: Standard ZLib compression.\n" +
-            "* `ZSTD` Compress with Zstandard codec. Since Pulsar 2.3.\n" +
-            "* `SNAPPY` Compress with Snappy codec. Since Pulsar 2.4."
-    )
-    private Property<CompressionType> compressionType;
+    private Data.From from;
 
     @Override
     public Output run(RunContext runContext) throws Exception {
-        try (PulsarClient client = PulsarService.client(this, runContext)) {
-            AbstractProducer<?> producer = switch (runContext.render(this.schemaType).as(SchemaType.class).orElseThrow()) {
-                case AVRO, JSON -> new GenericRecordProducer(
-                    runContext,
-                    client,
-                    runContext.render(this.schemaString).as(String.class).orElse(null),
-                    runContext.render(this.schemaType).as(SchemaType.class).orElseThrow()
-                );
-                default -> new ByteArrayProducer(runContext, client, runContext.render(this.serializer).as(SerdeType.class).orElseThrow());
+        try (PulsarClient client = createClient(runContext);
+             Producer<String> producer = client.newProducer(PulsarSchema.STRING)
+                 .topic(runContext.render(this.topic))
+                 .create()) {
+
+            int messagesCount = switch (from.resolveType(runContext)) {
+                case STRING -> sendFromString(runContext, producer, from.asString(runContext));
+                case LIST -> sendFromList(runContext, producer, from.asList(runContext));
+                case MAP -> sendSingleFromMap(runContext, producer, from.asMap(runContext));
+                case URI -> sendFromUri(runContext, producer, from.asUri(runContext));
             };
 
-            producer.constructProducer(runContext.render(this.topic).as(String.class).orElseThrow(),
-                runContext.render(this.producerName).as(String.class).orElse(null),
-                runContext.render(this.accessMode).as(ProducerAccessMode.class).orElse(null),
-                runContext.render(this.encryptionKey).as(String.class).orElse(null),
-                runContext.render(this.compressionType).as(CompressionType.class).orElse(null),
-                runContext.render(this.producerProperties).asMap(String.class, String.class)
-            );
-            int messageCount = producer.produceMessage(this.from);
+            producer.flush();
+            return Output.builder().messagesCount(messagesCount).build();
+        }
+    }
 
-            return Output.builder()
-                .messagesCount(messageCount)
-                .build();
+    private int sendFromString(RunContext runContext, Producer<String> producer, String message)
+        throws Exception {
+        producer.send(message);
+        return 1;
+    }
+
+    private int sendFromList(RunContext runContext, Producer<String> producer, List<?> list)
+        throws IllegalVariableEvaluationException {
+        return Flux.fromIterable(list)
+            .map(throwFunction(object -> {
+                Map<String, Object> msg = runContext.render((Map<String, Object>) object);
+                producer.send(msg.get("data").toString());
+                return 1;
+            }))
+            .reduce(Integer::sum)
+            .blockOptional()
+            .orElse(0);
+    }
+
+    private int sendSingleFromMap(RunContext runContext, Producer<String> producer, Map<String, Object> map)
+        throws Exception {
+        producer.send(runContext.render(map.get("data")).toString());
+        return 1;
+    }
+
+    private int sendFromUri(RunContext runContext, Producer<String> producer, URI uri)
+        throws Exception {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(runContext.storage().getFile(uri)))) {
+            List<Map<String, Object>> messages = FileSerde.readAll(reader);
+            return sendFromList(runContext, producer, messages);
         }
     }
 
     @Builder
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
-        @io.swagger.v3.oas.annotations.media.Schema(
-            title = "Number of messages produced."
-        )
+        @Schema(title = "Number of messages produced.")
         private final Integer messagesCount;
     }
 }
