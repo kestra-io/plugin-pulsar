@@ -76,7 +76,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
         )
     }
 )
-public class Produce extends AbstractPulsarConnection implements RunnableTask<Produce.Output> , Data.From  {
+public class Produce extends AbstractPulsarConnection implements RunnableTask<Produce.Output>, Data.From  {
     @Schema(
         title = "Pulsar topic to send a message to."
     )
