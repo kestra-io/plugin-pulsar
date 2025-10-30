@@ -155,7 +155,15 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
                 runContext.render(this.producerProperties).asMap(String.class, String.class)
             );
             int messageCount = Data.from(from).read(runContext)
-                .map(row -> producer.produceMessage(row))
+                .map(row -> {
+                    try {
+                        return producer.produceMessage(row);
+                    } catch (org.apache.pulsar.client.api.PulsarClientException.IncompatibleSchemaException | org.apache.pulsar.shade.org.apache.avro.AvroMissingFieldException e) {
+                        throw new RuntimeException(e);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
                 .reduce(Integer::sum)
                 .blockOptional().orElse(0);
 
