@@ -15,14 +15,12 @@ import org.apache.pulsar.client.api.ProducerAccessMode;
 import org.apache.pulsar.client.api.PulsarClient;
 
 import java.util.Map;
-import io.kestra.plugin.serdes.SerdeType;
+import io.kestra.plugin.serdes.SerdeType; 
 import io.kestra.plugin.pulsar.AbstractProducer;
 import io.kestra.plugin.pulsar.ByteArrayProducer;
 import io.kestra.plugin.pulsar.GenericRecordProducer;
 import io.kestra.plugin.pulsar.PulsarService;
 import io.kestra.plugin.pulsar.SchemaType;
-import io.kestra.plugin.pulsar.Data;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @SuperBuilder
 @ToString
