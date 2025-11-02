@@ -153,7 +153,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
                 .map(row -> {
                     try {
                         return producer.produceMessage(row);
-                    } catch (org.apache.pulsar.client.api.PulsarClientException.IncompatibleSchemaException | org.apache.pulsar.shade.org.apache.avro.AvroMissingFieldException e) {
+                    } catch (IncompatibleSchemaException | AvroMissingFieldException e) {
                         throw new RuntimeException(e);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
