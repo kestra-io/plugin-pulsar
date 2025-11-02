@@ -13,6 +13,8 @@ import lombok.experimental.SuperBuilder;
 import org.apache.pulsar.client.api.CompressionType;
 import org.apache.pulsar.client.api.ProducerAccessMode;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.PulsarClientException.IncompatibleSchemaException;
+import org.apache.pulsar.shade.org.apache.avro.AvroMissingFieldException;
 
 import java.util.Map;
 
