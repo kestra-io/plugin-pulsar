@@ -16,6 +16,8 @@ import org.apache.pulsar.client.api.PulsarClient;
 
 import java.util.Map;
 
+import static io.kestra.core.utils.Rethrow.throwFunction;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -148,17 +150,20 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
                 runContext.render(this.compressionType).as(CompressionType.class).orElse(null),
                 runContext.render(this.producerProperties).asMap(String.class, String.class)
             );
-            int messageCount = Data.from(from).read(runContext)
-                .<Integer>handle((data, sink) -> {
-                    try {
-                        sink.next(producer.produceMessage(data));
-                    } catch (Exception e) {
-                        sink.error(new RuntimeException(e));
-                    }
-                })
-                .reduce(Integer::sum)
-                .blockOptional()
-                .orElse(0);
+
+            int messageCount;
+            try {
+                messageCount = Data.from(from).read(runContext)
+                    .map(throwFunction(producer::produceMessage))
+                    .reduce(Integer::sum)
+                    .blockOptional()
+                    .orElse(0);
+            } catch (RuntimeException e) {
+                if (e.getCause() instanceof Exception ex) {
+                    throw ex;
+                }
+                throw e;
+            }
 
             return Output.builder()
                 .messagesCount(messageCount)
