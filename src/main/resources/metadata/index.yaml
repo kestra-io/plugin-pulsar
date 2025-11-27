@@ -1,0 +1,8 @@
+group: io.kestra.plugin.pulsar
+name: "pulsar"
+title: "Apache Pulsar"
+description: "This sub-group of plugins contains tasks for using the Apache Pulsar message broker."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
