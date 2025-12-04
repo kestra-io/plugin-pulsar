@@ -1,8 +1,8 @@
 group: io.kestra.plugin.pulsar
 name: "pulsar"
 title: "Apache Pulsar"
-description: "This sub-group of plugins contains tasks for using the Apache Pulsar message broker."
-body: ""
+description: "Tasks that publish, consume, and trigger workflows with Apache Pulsar."
+body: "Provide Pulsar service URLs and auth settings to produce messages, consume topics or subscriptions with ack/receiver options, and use triggers to start flows when new messages arrive."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
