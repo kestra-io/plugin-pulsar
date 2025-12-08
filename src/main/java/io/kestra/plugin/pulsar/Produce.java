@@ -45,7 +45,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
                     from: "{{ inputs.file }}"
 
                   - id: file_transform
-                    type: io.kestra.plugin.scripts.graalvm.FileTransform
+                    type: io.kestra.plugin.graalvm.js.FileTransform
                     from: {{ outputs.csv_reader.uri }}"
                     script: |
                       var result = {
