@@ -1,11 +1,11 @@
 plugins {
-    id "com.vanniktech.maven.publish" version "0.34.0"
+    id "com.vanniktech.maven.publish" version "0.36.0"
     id "io.kestra.gradle.inject-bom-versions" version "1.0.0"
     id 'java-library'
     id "idea"
     id 'jacoco'
     id "com.adarshr.test-logger" version "4.0.0"
-    id "com.gradleup.shadow" version "9.2.2"
+    id "com.gradleup.shadow" version "9.3.1"
     id 'signing'
     id "com.github.ben-manes.versions" version "0.53.0"
     id 'net.researchgate.release' version '3.1.0'
@@ -56,7 +56,7 @@ dependencies {
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
 
     // libs included in the final jar
-    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.0.6') {
+    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.1.2') {
         exclude group: 'com.fasterxml.jackson.core'
     }
 }
@@ -93,7 +93,7 @@ dependencies {
     testImplementation "io.micronaut.test:micronaut-test-junit5"
     testImplementation "io.micronaut.reactor:micronaut-reactor"
 
-    testImplementation(group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '4.0.6') {
+    testImplementation(group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '4.1.2') {
         exclude group: 'com.fasterxml.jackson.core'
     }
 
@@ -129,7 +129,7 @@ configurations {
 }
 
 dependencies {
-    agent "org.aspectj:aspectjweaver:1.9.24"
+    agent "org.aspectj:aspectjweaver:1.9.25.1"
 }
 
 test {
