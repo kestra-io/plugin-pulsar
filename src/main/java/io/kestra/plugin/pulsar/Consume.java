@@ -26,7 +26,8 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Consume a messages from Pulsar topic(s)."
+    title = "Consume messages from Pulsar topics",
+    description = "Subscribes to one or more topics, acknowledges messages after batch receive, and writes them to Kestra storage. Defaults: deserializer STRING, poll timeout 2s, subscription type Exclusive starting at Earliest."
 )
 @Plugin(
     examples = {
