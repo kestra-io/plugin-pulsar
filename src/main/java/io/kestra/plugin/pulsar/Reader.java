@@ -26,7 +26,8 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Read messages from Pulsar topic(s) without subscription."
+    title = "Read messages from Pulsar topics without subscription",
+    description = "Uses a non-durable reader to fetch messages without creating a subscription. Defaults: deserializer STRING, poll timeout 2s, starts at earliest unless positioned otherwise."
 )
 @Plugin(
     examples = {
@@ -48,17 +49,14 @@ import java.util.concurrent.TimeUnit;
 )
 public class Reader extends AbstractReader {
     @Schema(
-        title = "The initial reader positioning can be set at specific timestamp by providing total rollback duration.",
-        description = "So, broker can find a latest message that was published before given duration. eg: " +
-            "`since` set to 5 minutes (`PT5M`) indicates that broker should find message published 5 minutes in the past, " +
-            "and set the initial position to that messageId."
+        title = "Rollback duration for start position",
+        description = "Finds the latest message published before the given duration (e.g., `PT5M` starts 5 minutes in the past)."
     )
     private Property<Duration> since;
 
     @Schema(
-        title = "Position the reader on a particular message.",
-        description = "The first message read will be the one immediately *after* the specified message.\n" +
-            "If no `since` or `messageId` are provided, we start at the beginning of the topic."
+        title = "Start from specific message ID",
+        description = "Reads from the message immediately after the provided ID. If neither `since` nor `messageId` is set, starts at earliest."
     )
     private Property<String> messageId;
 

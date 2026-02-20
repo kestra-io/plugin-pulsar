@@ -25,8 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger a flow on message consumption in real-time from Pulsar topics.",
-    description = "If you would like to consume multiple messages processed within a given time frame and process them in batch, you can use the [io.kestra.plugin.pulsar.Trigger](https://kestra.io/plugins/plugin-pulsar/triggers/io.kestra.plugin.pulsar.trigger) instead."
+    title = "Trigger a flow for each Pulsar message",
+    description = "Consumes messages in real time and emits one execution per message. Use `Trigger` instead when batching messages over an interval."
 )
 @Plugin(
     examples = {
@@ -82,14 +82,14 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
     private Property<String> consumerName;
 
     @Schema(
-        title = "JSON string of the topic's schema",
-        description = "Required for connecting with topics with a defined schema and strict schema checking"
+        title = "Topic schema definition",
+        description = "JSON schema used when schema enforcement is enabled."
     )
     protected Property<String> schemaString;
 
     @Schema(
-        title = "The schema type of the topic",
-        description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
+        title = "Topic schema type",
+        description = "One of `NONE` (default), `AVRO`, or `JSON`."
     )
     @Builder.Default
     protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
@@ -183,4 +183,3 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
         }
     }
 }
-

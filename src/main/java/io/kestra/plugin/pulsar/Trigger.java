@@ -24,8 +24,8 @@ import java.util.Optional;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger a flow on periodic message consumption in real-time from Pulsar topics.",
-    description = "Note that you don't need an extra task to consume the message from the event trigger. The trigger will automatically consume messages and you can retrieve their content in your flow using the `{{ trigger.uri }}` variable. If you would like to consume each message from a Pulsar topic in real-time and create one execution per message, you can use the [io.kestra.plugin.pulsar.RealtimeTrigger](https://kestra.io/plugins/plugin-pulsar/triggers/io.kestra.plugin.pulsar.realtimetrigger) instead."
+    title = "Trigger a flow by polling Pulsar messages",
+    description = "Periodically consumes from topics, stores the batch in Kestra storage, and exposes it via `{{ trigger.uri }}`. Use `RealtimeTrigger` for one execution per message."
 )
 @Plugin(
     examples = {
@@ -71,14 +71,14 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     private Property<Duration> pollDuration = Property.ofValue(Duration.ofSeconds(2));
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "The maximum number of records to fetch before stopping.",
-        description = "It's not a hard limit and is evaluated every second."
+        title = "Maximum records before stop",
+        description = "Soft limit evaluated each second; stops after this many messages if set."
     )
     private Property<Integer> maxRecords;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "The maximum duration waiting for new record.",
-        description = "It's not a hard limit and is evaluated every second."
+        title = "Maximum read duration",
+        description = "Soft timeout evaluated each second; stops when exceeded."
     )
     private Property<Duration> maxDuration;
 
@@ -97,14 +97,14 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     private Property<String> consumerName;
 
     @Schema(
-        title = "JSON string of the topic's schema",
-        description = "Required for connecting with topics with a defined schema and strict schema checking"
+        title = "Topic schema definition",
+        description = "JSON schema used when schema enforcement is enabled."
     )
     protected Property<String> schemaString;
 
     @Schema(
-        title = "The schema type of the topic",
-        description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
+        title = "Topic schema type",
+        description = "One of `NONE` (default), `AVRO`, or `JSON`."
     )
     @Builder.Default
     protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
@@ -149,4 +149,3 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
         return Optional.of(execution);
     }
 }
-

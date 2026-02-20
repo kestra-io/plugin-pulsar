@@ -10,36 +10,41 @@ import java.util.Map;
 
 public interface SubscriptionInterface {
     @Schema(
-        title = "The subscription name.",
-        description = "Using subscription name, we will fetch only records that haven't been consumed yet."
+        title = "Subscription name",
+        description = "Identifies the subscription so only unconsumed records for that subscription are fetched."
     )
     @NotNull
     Property<String> getSubscriptionName();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "The position of a subscription to the topic."
+        title = "Initial subscription position",
+        description = "Where to start consuming (default `Earliest`)."
     )
     @NotNull
     Property<SubscriptionInitialPosition> getInitialPosition();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "The subscription type."
+        title = "Subscription type",
+        description = "Delivery semantics such as `Exclusive` (default), `Shared`, or `Failover`."
     )
     @NotNull
     Property<SubscriptionType> getSubscriptionType();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Add all the properties in the provided map to the consumer."
+        title = "Consumer properties",
+        description = "Key/value properties applied to the Pulsar consumer builder."
     )
     Property<Map<String, String>> getConsumerProperties();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Add a public encryption key to the producer/consumer."
+        title = "Public encryption key",
+        description = "Key used for payload encryption/decryption when the topic is secured."
     )
     Property<String> getEncryptionKey();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "The consumer name."
+        title = "Consumer name",
+        description = "Optional name reused on reconnects; helps coordinate with broker policies."
     )
     Property<String> getConsumerName();
 }
