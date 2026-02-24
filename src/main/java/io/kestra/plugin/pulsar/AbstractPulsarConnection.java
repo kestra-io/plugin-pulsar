@@ -19,14 +19,14 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
     private TlsOptions tlsOptions;
 
     @Schema(
-      title = "JSON string of the topic's schema",
-      description = "Required for connecting with topics with a defined schema and strict schema checking"
+      title = "Topic schema definition",
+      description = "JSON representation of the topic schema when schema enforcement is enabled."
     )
     protected Property<String> schemaString;
 
     @Schema(
-      title = "The schema type of the topic",
-      description = "Can be one of NONE, AVRO or JSON. None means there will be no schema enforced."
+      title = "Topic schema type",
+      description = "One of `NONE` (default, no enforcement), `AVRO`, or `JSON`."
     )
     @Builder.Default
     protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
@@ -34,22 +34,22 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
     @Value
     public static class TlsOptions {
         @Schema(
-            title = "The client certificate.",
-            description = "Must be a base64-encoded pem file."
+            title = "Client certificate",
+            description = "Base64-encoded PEM content for the client certificate."
 
         )
         Property<String> cert;
 
         @Schema(
-            title = "The key certificate.",
-            description = "Must be a base64-encoded pem file."
+            title = "Client key",
+            description = "Base64-encoded PEM private key matching the client certificate."
 
         )
         Property<String> key;
 
         @Schema(
-            title = "The ca certificate.",
-            description = "Must be a base64-encoded pem file."
+            title = "CA certificate",
+            description = "Base64-encoded PEM of the trusted CA chain."
 
         )
         Property<String> ca;

@@ -58,14 +58,14 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     private Property<Duration> pollDuration = Property.ofValue(Duration.ofSeconds(2));
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "The maximum number of records to fetch before stopping.",
-        description = "It's not a hard limit and is evaluated every second."
+        title = "Maximum records before stop",
+        description = "Soft limit evaluated each second; stops after this many messages if set."
     )
     private Property<Integer> maxRecords;
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "The maximum duration waiting for new record.",
-        description = "It's not a hard limit and is evaluated every second."
+        title = "Maximum read duration",
+        description = "Soft timeout evaluated each second; stops when exceeded."
     )
     private Property<Duration> maxDuration;
 
@@ -170,12 +170,12 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Number of messages consumed."
+        title = "Number of messages consumed"
         )
         private final Integer messagesCount;
 
         @io.swagger.v3.oas.annotations.media.Schema(
-        title = "URI of a Kestra internal storage file containing the consumed messages."
+        title = "URI of Kestra storage file with consumed messages"
         )
         private URI uri;
     }

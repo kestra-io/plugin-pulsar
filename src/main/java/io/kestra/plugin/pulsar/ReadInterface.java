@@ -7,15 +7,15 @@ import jakarta.validation.constraints.NotNull;
 
 public interface ReadInterface {
     @Schema(
-        title = "Pulsar topic(s) where to consume messages from.",
-        description = "Can be a string or a list of strings to consume from multiple topics."
+        title = "Source topic(s)",
+        description = "Single topic or list of topics to consume."
     )
     @NotNull
     @PluginProperty(dynamic = true)
     Object getTopic();
 
     @Schema(
-        title = "Deserializer used for the value."
+        title = "Value deserializer"
     )
     @NotNull
     Property<SerdeType> getDeserializer();
