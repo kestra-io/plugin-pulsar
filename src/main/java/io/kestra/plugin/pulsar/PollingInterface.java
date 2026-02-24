@@ -9,8 +9,8 @@ import java.time.Duration;
 public interface PollingInterface {
 
     @Schema(
-        title = "Duration waiting for record to be polled.",
-        description = "If no records are available, the maximum wait to wait for a new record. "
+        title = "Poll wait duration",
+        description = "Maximum time to wait for a new record when none are immediately available."
     )
     @NotNull
     Property<Duration> getPollDuration();
