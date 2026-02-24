@@ -24,7 +24,8 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Produce a message in a Pulsar topic."
+    title = "Publish messages to a Pulsar topic",
+    description = "Reads records from Kestra storage or inline maps/lists and sends them with a Pulsar producer. Uses STRING serialization and no compression by default; Pulsar's shared producer mode applies unless another access mode is set."
 )
 @Plugin(
     examples = {
@@ -46,7 +47,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 
                   - id: file_transform
                     type: io.kestra.plugin.graalvm.js.FileTransform
-                    from: {{ outputs.csv_reader.uri }}"
+                    from: "{{ outputs.csv_reader.uri }}"
                     script: |
                       var result = {
                         "key": row.id,
@@ -73,59 +74,53 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 )
 public class Produce extends AbstractPulsarConnection implements RunnableTask<Produce.Output>, Data.From {
     @Schema(
-        title = "Pulsar topic to send a message to."
+        title = "Target Pulsar topic"
     )
     @NotNull
     private Property<String> topic;
 
     @Schema(
-        title = "Source of the sent message.",
-        description = "Can be a Kestra internal storage URI, a map or a list " +
-            "in the following format: `key`, `value`, `eventTime`, `properties`, " +
-            "`deliverAt`, `deliverAfter` and `sequenceId`."
+        title = "Message source",
+        description = "Kestra internal storage URI, or map/list objects with optional `key`, `value`, `eventTime`, `properties`, `deliverAt`, `deliverAfter`, and `sequenceId` fields."
     )
     @NotNull
     private Object from;
 
     @Schema(
-        title = "Serializer used for the value."
+        title = "Serializer for message value",
+        description = "Defaults to `STRING`. Choose a serializer compatible with consumers and topic schema."
     )
     @NotNull
     @Builder.Default
     private Property<SerdeType> serializer = Property.ofValue(SerdeType.STRING);
 
     @Schema(
-        title = "Specify a name for the producer."
+        title = "Custom producer name",
+        description = "Optional name reused on reconnects; may affect exclusive access checks."
     )
     private Property<String> producerName;
 
     @Schema(
-        title = "Add all the properties in the provided map to the producer."
+        title = "Producer properties",
+        description = "Key/value properties passed to the Pulsar producer builder."
     )
     private Property<Map<String, String>> producerProperties;
 
     @Schema(
-        title = "Configure the type of access mode that the producer requires on the topic.",
-        description = "Possible values are:\n" +
-            "* `Shared`: By default, multiple producers can publish to a topic.\n" +
-            "* `Exclusive`: Require exclusive access for producer. Fail immediately if there's already a producer connected.\n" +
-            "* `WaitForExclusive`: Producer creation is pending until it can acquire exclusive access."
+        title = "Producer access mode",
+        description = "`Shared` (default Pulsar behavior) allows multiple producers; `Exclusive` fails if another producer is connected; `WaitForExclusive` waits for exclusivity."
     )
     private Property<ProducerAccessMode> accessMode;
 
     @Schema(
-        title = "Add public encryption key, used by producer to encrypt the data key."
+        title = "Public encryption key",
+        description = "PEM-encoded key used to encrypt the data key for message payload encryption."
     )
     private Property<String> encryptionKey;
 
     @Schema(
-        title = "Set the compression type for the producer.",
-        description = "By default, message payloads are not compressed. Supported compression types are:\n" +
-            "* `NONE`: No compression (Default).\n" +
-            "* `LZ4`: Compress with LZ4 algorithm. Faster but lower compression than ZLib.\n" +
-            "* `ZLIB`: Standard ZLib compression.\n" +
-            "* `ZSTD` Compress with Zstandard codec. Since Pulsar 2.3.\n" +
-            "* `SNAPPY` Compress with Snappy codec. Since Pulsar 2.4."
+        title = "Producer compression type",
+        description = "Default `NONE`. Other options: `LZ4`, `ZLIB`, `ZSTD`, `SNAPPY`. Use to reduce payload size at the cost of CPU."
     )
     private Property<CompressionType> compressionType;
 
@@ -175,7 +170,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "Number of messages produced."
+            title = "Number of messages produced"
         )
         private final Integer messagesCount;
     }
