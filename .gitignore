@@ -17,3 +17,4 @@ src/test/resources/application-test.yml
 .metals/
 .bloop/.factorypath
 bin/
+.factorypath
