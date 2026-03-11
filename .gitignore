@@ -15,4 +15,5 @@ out/
 .attach*
 src/test/resources/application-test.yml
 .metals/
-.bloop/
+.bloop/.factorypath
+bin/
