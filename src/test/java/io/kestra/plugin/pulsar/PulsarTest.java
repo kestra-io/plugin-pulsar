@@ -1,15 +1,11 @@
 package io.kestra.plugin.pulsar;
 
-import com.google.common.collect.ImmutableMap;
-import io.kestra.core.junit.annotations.KestraTest;
-import io.kestra.core.models.property.Property;
-import io.kestra.core.runners.RunContext;
-import io.kestra.core.runners.RunContextFactory;
-import io.kestra.core.serializers.FileSerde;
-import io.kestra.core.storages.StorageInterface;
-import io.kestra.core.tenant.TenantService;
-import io.kestra.core.utils.IdUtils;
-import jakarta.inject.Inject;
+import java.io.*;
+import java.net.URI;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.util.*;
+
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.PulsarClientException.IncompatibleSchemaException;
 import org.apache.pulsar.client.api.Schema;
@@ -18,11 +14,18 @@ import org.apache.pulsar.client.api.schema.SchemaDefinition;
 import org.apache.pulsar.shade.org.apache.avro.AvroMissingFieldException;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
-import java.net.URI;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.util.*;
+import com.google.common.collect.ImmutableMap;
+
+import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.core.models.property.Property;
+import io.kestra.core.runners.RunContext;
+import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.serializers.FileSerde;
+import io.kestra.core.storages.StorageInterface;
+import io.kestra.core.tenant.TenantService;
+import io.kestra.core.utils.IdUtils;
+
+import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -45,11 +48,12 @@ public class PulsarTest {
             data.put("username", "Kestra-" + i);
             data.put("number", i);
 
-            FileSerde.write(output, ImmutableMap.builder()
-                .put("key", "key-" + i)
-                .put("value", data)
-                .put("eventTime", ZonedDateTime.parse("1998-01-23T06:00:00-05:00"))
-                .build()
+            FileSerde.write(
+                output, ImmutableMap.builder()
+                    .put("key", "key-" + i)
+                    .put("value", data)
+                    .put("eventTime", ZonedDateTime.parse("1998-01-23T06:00:00-05:00"))
+                    .build()
             );
         }
 
@@ -140,15 +144,18 @@ public class PulsarTest {
             .uri(Property.ofValue("pulsar://localhost:26650"))
             .serializer(Property.ofValue(SerdeType.JSON))
             .topic(Property.ofValue(topic))
-            .from(ImmutableMap.builder()
-                .put("key", "string")
-                .put("value", Map.of(
-                    "username", "Kestra",
-                    "tweet", "Kestra is open source",
-                    "timestamp", System.currentTimeMillis() / 1000
-                ))
-                .put("timestamp", Instant.now().toEpochMilli())
-                .build()
+            .from(
+                ImmutableMap.builder()
+                    .put("key", "string")
+                    .put(
+                        "value", Map.of(
+                            "username", "Kestra",
+                            "tweet", "Kestra is open source",
+                            "timestamp", System.currentTimeMillis() / 1000
+                        )
+                    )
+                    .put("timestamp", Instant.now().toEpochMilli())
+                    .build()
             )
             .build();
 
@@ -175,26 +182,32 @@ public class PulsarTest {
             .uri(Property.ofValue("pulsar://localhost:26650"))
             .serializer(Property.ofValue(SerdeType.STRING))
             .topic(Property.ofValue(topic))
-            .from(List.of(
-                ImmutableMap.builder()
-                    .put("key", "string")
-                    .put("value", Map.of(
-                        "username", "Kestra",
-                        "tweet", "Kestra is open source",
-                        "timestamp", System.currentTimeMillis() / 1000
-                    ))
-                    .put("timestamp", Instant.now().toEpochMilli())
-                    .build(),
-                ImmutableMap.builder()
-                    .put("key", "string")
-                    .put("value", Map.of(
-                        "username", "Kestra",
-                        "tweet", "Kestra is open source",
-                        "timestamp", System.currentTimeMillis() / 1000
-                    ))
-                    .put("timestamp", Instant.now().toEpochMilli())
-                    .build()
-            ))
+            .from(
+                List.of(
+                    ImmutableMap.builder()
+                        .put("key", "string")
+                        .put(
+                            "value", Map.of(
+                                "username", "Kestra",
+                                "tweet", "Kestra is open source",
+                                "timestamp", System.currentTimeMillis() / 1000
+                            )
+                        )
+                        .put("timestamp", Instant.now().toEpochMilli())
+                        .build(),
+                    ImmutableMap.builder()
+                        .put("key", "string")
+                        .put(
+                            "value", Map.of(
+                                "username", "Kestra",
+                                "tweet", "Kestra is open source",
+                                "timestamp", System.currentTimeMillis() / 1000
+                            )
+                        )
+                        .put("timestamp", Instant.now().toEpochMilli())
+                        .build()
+                )
+            )
             .build();
 
         Produce.Output runOutput = task.run(runContext);
@@ -229,15 +242,17 @@ public class PulsarTest {
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
 
         String schemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": \"int\"}}, {\"name\": \"int\", \"type\": \"int\"}]}";
-        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord>builder().withJsonDef(schemaString).build()).getSchemaInfo());
+        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord> builder().withJsonDef(schemaString).build()).getSchemaInfo());
 
         ImmutableMap<Object, Object> item = ImmutableMap.builder()
-        .put("value", Map.of(
-            "string", "hello",
-            "array", Arrays.asList(1,2,3),
-            "int", 2
-        ))
-        .build();
+            .put(
+                "value", Map.of(
+                    "string", "hello",
+                    "array", Arrays.asList(1, 2, 3),
+                    "int", 2
+                )
+            )
+            .build();
 
         Produce task = Produce.builder()
             .uri(Property.ofValue("pulsar://localhost:26650"))
@@ -265,7 +280,7 @@ public class PulsarTest {
 
     @Test
     void nestedRecordTypeArray() throws Exception {
-      RunContext runContext = runContextFactory.of(ImmutableMap.of());
+        RunContext runContext = runContextFactory.of(ImmutableMap.of());
         String topic = "tu_" + IdUtils.create();
         String namespace = "public/default";
         String fullTopicName = namespace + "/" + topic;
@@ -280,15 +295,25 @@ public class PulsarTest {
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
 
         String schemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": {\"type\": \"record\", \"name\": \"SubType\", \"fields\": [{\"name\":\"testVal\", \"type\":\"int\"}]}}}, {\"name\": \"int\", \"type\": \"int\"}]}";
-        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord>builder().withJsonDef(schemaString).build()).getSchemaInfo());
+        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord> builder().withJsonDef(schemaString).build()).getSchemaInfo());
 
         ImmutableMap<Object, Object> item = ImmutableMap.builder()
-        .put("value", Map.of(
-            "string", "hello",
-            "array", Arrays.asList(new HashMap<String, Integer>(){{put("testVal", 3);}}, new HashMap<String, Integer>(){{put("testVal", 3);}}),
-            "int", 2
-        ))
-        .build();
+            .put(
+                "value", Map.of(
+                    "string", "hello",
+                    "array", Arrays.asList(new HashMap<String, Integer>() {
+                        {
+                            put("testVal", 3);
+                        }
+                    }, new HashMap<String, Integer>() {
+                        {
+                            put("testVal", 3);
+                        }
+                    }),
+                    "int", 2
+                )
+            )
+            .build();
 
         Produce task = Produce.builder()
             .uri(Property.ofValue("pulsar://localhost:26650"))
@@ -316,7 +341,7 @@ public class PulsarTest {
 
     @Test
     void nestedRecordTypeMap() throws Exception {
-      RunContext runContext = runContextFactory.of(ImmutableMap.of());
+        RunContext runContext = runContextFactory.of(ImmutableMap.of());
         String topic = "tu_" + IdUtils.create();
         String namespace = "public/default";
         String fullTopicName = namespace + "/" + topic;
@@ -331,15 +356,30 @@ public class PulsarTest {
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
 
         String schemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"map\", \"type\": {\"type\": \"map\", \"values\": {\"type\": \"record\", \"name\": \"SubType\", \"fields\": [{\"name\":\"testVal\", \"type\":\"int\"}]}}}, {\"name\": \"int\", \"type\": \"int\"}]}";
-        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord>builder().withJsonDef(schemaString).build()).getSchemaInfo());
+        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord> builder().withJsonDef(schemaString).build()).getSchemaInfo());
 
         ImmutableMap<Object, Object> item = ImmutableMap.builder()
-        .put("value", Map.of(
-            "string", "hello",
-            "map", new HashMap<String, Object>(){{ put("a", new HashMap<String, Integer>(){{put("testVal", 3);}}); put("b", new HashMap<String, Integer>(){{put("testVal", 3);}}); }},
-            "int", 2
-        ))
-        .build();
+            .put(
+                "value", Map.of(
+                    "string", "hello",
+                    "map", new HashMap<String, Object>() {
+                        {
+                            put("a", new HashMap<String, Integer>() {
+                                {
+                                    put("testVal", 3);
+                                }
+                            });
+                            put("b", new HashMap<String, Integer>() {
+                                {
+                                    put("testVal", 3);
+                                }
+                            });
+                        }
+                    },
+                    "int", 2
+                )
+            )
+            .build();
 
         Produce task = Produce.builder()
             .uri(Property.ofValue("pulsar://localhost:26650"))
@@ -397,15 +437,17 @@ public class PulsarTest {
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
 
         String schemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": \"int\"}}, {\"name\": \"int\", \"type\": \"int\"}]}";
-        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord>builder().withJsonDef(schemaString).build()).getSchemaInfo());
+        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord> builder().withJsonDef(schemaString).build()).getSchemaInfo());
 
         ImmutableMap<Object, Object> item = ImmutableMap.builder()
-        .put("value", Map.of(
-            "string", "hello",
-            "array", Arrays.asList(1,2,3),
-            "int", 2
-        ))
-        .build();
+            .put(
+                "value", Map.of(
+                    "string", "hello",
+                    "array", Arrays.asList(1, 2, 3),
+                    "int", 2
+                )
+            )
+            .build();
 
         Produce task = Produce.builder()
             .uri(Property.ofValue("pulsar://localhost:26650"))
@@ -432,14 +474,16 @@ public class PulsarTest {
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
 
         String schemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": \"int\"}}, {\"name\": \"int\", \"type\": \"int\"}]}";
-        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord>builder().withJsonDef(schemaString).build()).getSchemaInfo());
+        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord> builder().withJsonDef(schemaString).build()).getSchemaInfo());
 
         ImmutableMap<Object, Object> item = ImmutableMap.builder()
-        .put("value", Map.of(
-            "string", "hello",
-            "array", Arrays.asList(1,2,3)
-        ))
-        .build();
+            .put(
+                "value", Map.of(
+                    "string", "hello",
+                    "array", Arrays.asList(1, 2, 3)
+                )
+            )
+            .build();
 
         String incorrectSchemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": \"int\"}}]}";
         Produce task = Produce.builder()
@@ -469,14 +513,16 @@ public class PulsarTest {
         admin.topics().setSchemaValidationEnforced(fullTopicName, true);
 
         String schemaString = "{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": [{\"name\": \"string\", \"type\": \"string\"}, {\"name\": \"array\", \"type\": {\"type\": \"array\", \"items\": \"int\"}}, {\"name\": \"int\", \"type\": \"int\"}]}";
-        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord>builder().withJsonDef(schemaString).build()).getSchemaInfo());
+        admin.schemas().createSchema(fullTopicName, Schema.AVRO(SchemaDefinition.<GenericRecord> builder().withJsonDef(schemaString).build()).getSchemaInfo());
 
         ImmutableMap<Object, Object> item = ImmutableMap.builder()
-        .put("value", Map.of(
-            "string", "hello",
-            "array", Arrays.asList(1,2,3)
-        ))
-        .build();
+            .put(
+                "value", Map.of(
+                    "string", "hello",
+                    "array", Arrays.asList(1, 2, 3)
+                )
+            )
+            .build();
 
         Produce task = Produce.builder()
             .uri(Property.ofValue("pulsar://localhost:26650"))

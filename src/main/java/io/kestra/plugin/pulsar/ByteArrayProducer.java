@@ -1,13 +1,14 @@
 package io.kestra.plugin.pulsar;
 
-import io.kestra.core.runners.RunContext;
+import java.util.Map;
+
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.TypedMessageBuilder;
 
-import java.util.Map;
+import io.kestra.core.runners.RunContext;
 
-public class ByteArrayProducer extends AbstractProducer<byte[]>{
+public class ByteArrayProducer extends AbstractProducer<byte[]> {
 
     private final SerdeType serializer;
 

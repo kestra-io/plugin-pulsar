@@ -2,6 +2,7 @@ package io.kestra.plugin.pulsar;
 
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.Task;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -19,14 +20,14 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
     private TlsOptions tlsOptions;
 
     @Schema(
-      title = "Topic schema definition",
-      description = "JSON representation of the topic schema when schema enforcement is enabled."
+        title = "Topic schema definition",
+        description = "JSON representation of the topic schema when schema enforcement is enabled."
     )
     protected Property<String> schemaString;
 
     @Schema(
-      title = "Topic schema type",
-      description = "One of `NONE` (default, no enforcement), `AVRO`, or `JSON`."
+        title = "Topic schema type",
+        description = "One of `NONE` (default, no enforcement), `AVRO`, or `JSON`."
     )
     @Builder.Default
     protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);

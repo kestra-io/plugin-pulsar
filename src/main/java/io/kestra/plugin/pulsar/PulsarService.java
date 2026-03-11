@@ -1,18 +1,19 @@
 package io.kestra.plugin.pulsar;
 
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
-import io.kestra.core.runners.RunContext;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.pulsar.client.api.Authentication;
 import org.apache.pulsar.client.api.AuthenticationFactory;
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.auth.AuthenticationTls;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.runners.RunContext;
 
 public abstract class PulsarService {
     public static String decodeBase64(RunContext runContext, String value) throws IllegalVariableEvaluationException, IOException {

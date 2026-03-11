@@ -1,21 +1,5 @@
 package io.kestra.plugin.pulsar;
 
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
-import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.Metric;
-import io.kestra.core.models.executions.metrics.Counter;
-import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.RunnableTask;
-import io.kestra.core.runners.RunContext;
-import io.kestra.core.serializers.FileSerde;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.shade.org.apache.avro.Schema;
-import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumReader;
-import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumWriter;
-import org.apache.pulsar.shade.org.apache.avro.io.*;
-
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +11,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+
+import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.shade.org.apache.avro.Schema;
+import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumReader;
+import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumWriter;
+import org.apache.pulsar.shade.org.apache.avro.io.*;
+
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.annotations.Metric;
+import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.executions.metrics.Counter;
+import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTask;
+import io.kestra.core.runners.RunContext;
+import io.kestra.core.serializers.FileSerde;
+
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Plugin(
     metrics = {
@@ -69,7 +71,6 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     )
     private Property<Duration> maxDuration;
 
-
     public Output read(RunContext runContext, Supplier<List<Message<byte[]>>> supplier) throws Exception {
         File tempFile = runContext.workingDir().createTempFile(".ion").toFile();
         Map<String, Integer> count = new HashMap<>();
@@ -81,13 +82,17 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
             do {
                 for (Message<byte[]> message : supplier.get()) {
                     boolean applySchema = runContext.render(this.schemaType).as(SchemaType.class).orElseThrow() != SchemaType.NONE;
-                    if (applySchema && this.schemaString == null){
+                    if (applySchema && this.schemaString == null) {
                         throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null");
                     }
 
                     Map<Object, Object> map = new HashMap<>();
                     map.put("key", message.getKey());
-                    map.put("value", applySchema ? deserializeWithSchema(message.getValue(), runContext) : runContext.render(this.deserializer).as(SerdeType.class).orElseThrow().deserialize(message.getValue()));
+                    map.put(
+                        "value",
+                        applySchema ? deserializeWithSchema(message.getValue(), runContext)
+                            : runContext.render(this.deserializer).as(SerdeType.class).orElseThrow().deserialize(message.getValue())
+                    );
                     map.put("properties", message.getProperties());
                     map.put("topic", message.getTopicName());
                     if (message.getEventTime() != 0) {
@@ -108,8 +113,8 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
 
             count
                 .forEach((s, integer) -> runContext.metric(Counter.of("reader.records", integer, "topic", s)));
-            
-            runContext.metric(Counter.of("records.total",count.values().stream().mapToInt(Integer::intValue).sum()));
+
+            runContext.metric(Counter.of("records.total", count.values().stream().mapToInt(Integer::intValue).sum()));
 
             return Output.builder()
                 .messagesCount(count.values().stream().mapToInt(Integer::intValue).sum())
@@ -170,12 +175,12 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Number of messages consumed"
+            title = "Number of messages consumed"
         )
         private final Integer messagesCount;
 
         @io.swagger.v3.oas.annotations.media.Schema(
-        title = "URI of Kestra storage file with consumed messages"
+            title = "URI of Kestra storage file with consumed messages"
         )
         private URI uri;
     }

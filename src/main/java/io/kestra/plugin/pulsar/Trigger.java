@@ -1,5 +1,13 @@
 package io.kestra.plugin.pulsar;
 
+import java.time.Duration;
+import java.util.Map;
+import java.util.Optional;
+
+import org.apache.pulsar.client.api.SubscriptionInitialPosition;
+import org.apache.pulsar.client.api.SubscriptionType;
+import org.slf4j.Logger;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.conditions.ConditionContext;
@@ -7,16 +15,10 @@ import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.pulsar.client.api.SubscriptionInitialPosition;
-import org.apache.pulsar.client.api.SubscriptionType;
-import org.slf4j.Logger;
-
-import java.time.Duration;
-import java.util.Map;
-import java.util.Optional;
 
 @SuperBuilder
 @ToString
@@ -52,7 +54,8 @@ import java.util.Optional;
         )
     }
 )
-public class Trigger extends AbstractTrigger implements PollingTriggerInterface, TriggerOutput<AbstractReader.Output>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface, PollingInterface {
+public class Trigger extends AbstractTrigger
+    implements PollingTriggerInterface, TriggerOutput<AbstractReader.Output>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface, PollingInterface {
     @Builder.Default
     private final Duration interval = Duration.ofSeconds(60);
 

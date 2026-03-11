@@ -1,10 +1,11 @@
 package io.kestra.plugin.pulsar;
 
+import java.time.Duration;
+
 import io.kestra.core.models.property.Property;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-
-import java.time.Duration;
 
 public interface PollingInterface {
 

@@ -1,14 +1,5 @@
 package io.kestra.plugin.pulsar;
 
-import io.kestra.core.models.executions.metrics.Counter;
-import io.kestra.core.runners.RunContext;
-import io.kestra.core.models.annotations.Metric;
-import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.executions.metrics.Timer;
-import io.kestra.core.serializers.FileSerde;
-import org.apache.pulsar.client.api.*;
-import reactor.core.publisher.Flux;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -22,6 +13,17 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import org.apache.pulsar.client.api.*;
+
+import io.kestra.core.models.annotations.Metric;
+import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.executions.metrics.Counter;
+import io.kestra.core.models.executions.metrics.Timer;
+import io.kestra.core.runners.RunContext;
+import io.kestra.core.serializers.FileSerde;
+
+import reactor.core.publisher.Flux;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
@@ -49,7 +51,6 @@ public abstract class AbstractProducer<T> {
     private final PulsarClient client;
     private final RunContext runContext;
 
-
     public AbstractProducer(RunContext runContext, PulsarClient client) {
         this.client = client;
         this.runContext = runContext;
@@ -61,7 +62,7 @@ public abstract class AbstractProducer<T> {
         ProducerAccessMode accessMode,
         String encryptionKey,
         CompressionType compressionType,
-        Map<String, String> producerProperties ) throws Exception {
+        Map<String, String> producerProperties) throws Exception {
 
         this.producerBuilder = this.getProducerBuilder(this.client);
         this.producerBuilder
@@ -85,14 +86,19 @@ public abstract class AbstractProducer<T> {
         }
 
         if (producerProperties != null) {
-            this.producerBuilder.properties(producerProperties
-                .entrySet()
-                .stream()
-                .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
-                    this.runContext.render(e.getKey()),
-                    this.runContext.render(e.getValue())
-                )))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+            this.producerBuilder.properties(
+                producerProperties
+                    .entrySet()
+                    .stream()
+                    .map(
+                        throwFunction(
+                            e -> new AbstractMap.SimpleEntry<>(
+                                this.runContext.render(e.getKey()),
+                                this.runContext.render(e.getValue())
+                            )
+                        )
+                    )
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
             );
         }
     }
@@ -132,10 +138,11 @@ public abstract class AbstractProducer<T> {
     @SuppressWarnings("unchecked")
     private Flux<Integer> buildFlowable(Flux<Object> flowable) throws Exception {
         return flowable
-        .map(throwFunction(row -> {
-            this.produceMessage((Map<String, Object>) row);
-            return 1;
-        }));
+            .map(throwFunction(row ->
+            {
+                this.produceMessage((Map<String, Object>) row);
+                return 1;
+            }));
     }
 
     @SuppressWarnings("unchecked")

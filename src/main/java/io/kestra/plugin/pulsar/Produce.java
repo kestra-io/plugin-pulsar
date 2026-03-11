@@ -1,20 +1,22 @@
 package io.kestra.plugin.pulsar;
 
+import java.util.Map;
+
+import org.apache.pulsar.client.api.CompressionType;
+import org.apache.pulsar.client.api.ProducerAccessMode;
+import org.apache.pulsar.client.api.PulsarClient;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Data;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.pulsar.client.api.CompressionType;
-import org.apache.pulsar.client.api.ProducerAccessMode;
-import org.apache.pulsar.client.api.PulsarClient;
-
-import java.util.Map;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
@@ -138,7 +140,8 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
                     new ByteArrayProducer(runContext, client, runContext.render(this.serializer).as(SerdeType.class).orElseThrow());
             };
 
-            producer.constructProducer(runContext.render(this.topic).as(String.class).orElseThrow(),
+            producer.constructProducer(
+                runContext.render(this.topic).as(String.class).orElseThrow(),
                 runContext.render(this.producerName).as(String.class).orElse(null),
                 runContext.render(this.accessMode).as(ProducerAccessMode.class).orElse(null),
                 runContext.render(this.encryptionKey).as(String.class).orElse(null),

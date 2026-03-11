@@ -1,24 +1,26 @@
 package io.kestra.plugin.pulsar;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.MessageId;
+import org.apache.pulsar.client.api.PulsarClient;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.Rethrow;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.client.api.MessageId;
-import org.apache.pulsar.client.api.PulsarClient;
-
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @SuperBuilder
 @ToString
@@ -78,7 +80,8 @@ public class Reader extends AbstractReader {
             try (org.apache.pulsar.client.api.Reader<byte[]> reader = readerBuilder.create()) {
                 return this.read(
                     runContext,
-                    Rethrow.throwSupplier(() -> {
+                    Rethrow.throwSupplier(() ->
+                    {
                         Message<byte[]> message = reader.readNext(runContext.render(this.getPollDuration()).as(Duration.class).orElseThrow().getNano(), TimeUnit.NANOSECONDS);
 
                         if (message == null) {

@@ -1,5 +1,13 @@
 package io.kestra.plugin.pulsar;
 
+import java.time.Instant;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import org.apache.pulsar.client.api.*;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -7,16 +15,10 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.Rethrow;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.pulsar.client.api.*;
-
-import java.time.Instant;
-import java.util.AbstractMap;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
@@ -71,13 +73,15 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
             try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
                 return this.read(
                     runContext,
-                    Rethrow.throwSupplier(() -> {
+                    Rethrow.throwSupplier(() ->
+                    {
                         try {
                             Messages<byte[]> messages = consumer.batchReceive();
 
                             return StreamSupport
                                 .stream(messages.spliterator(), false)
-                                .map(Rethrow.throwFunction(message -> {
+                                .map(Rethrow.throwFunction(message ->
+                                {
                                     consumer.acknowledge(message);
 
                                     return message;
@@ -93,7 +97,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
     }
 
     public ConsumerBuilder<byte[]> newConsumerBuilder(final RunContext runContext,
-                                                      final PulsarClient client) throws IllegalVariableEvaluationException {
+        final PulsarClient client) throws IllegalVariableEvaluationException {
         ConsumerBuilder<byte[]> consumerBuilder = client.newConsumer()
             .topics(this.topics(runContext))
             .subscriptionName(runContext.render(this.subscriptionName).as(String.class).orElse(null))
@@ -105,14 +109,19 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
         }
 
         if (this.consumerProperties != null) {
-            consumerBuilder.properties(runContext.render(this.consumerProperties).asMap(String.class, String.class)
-                .entrySet()
-                .stream()
-                .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
-                    runContext.render(e.getKey()),
-                    runContext.render(e.getValue())
-                )))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+            consumerBuilder.properties(
+                runContext.render(this.consumerProperties).asMap(String.class, String.class)
+                    .entrySet()
+                    .stream()
+                    .map(
+                        throwFunction(
+                            e -> new AbstractMap.SimpleEntry<>(
+                                runContext.render(e.getKey()),
+                                runContext.render(e.getValue())
+                            )
+                        )
+                    )
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
             );
         }
 
@@ -128,13 +137,15 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
             throw new IllegalArgumentException("Must pass a \"schemaString\" when the \"schemaType\" is not null");
         }
 
-        PulsarMessage.PulsarMessageBuilder builder =
-            PulsarMessage.builder()
-                .key(message.getKey())
-                .properties(message.getProperties())
-                .topic(message.getTopicName());
+        PulsarMessage.PulsarMessageBuilder builder = PulsarMessage.builder()
+            .key(message.getKey())
+            .properties(message.getProperties())
+            .topic(message.getTopicName());
 
-        builder.value(applySchema ? this.deserializeWithSchema(message.getValue(), runContext) : runContext.render(this.getDeserializer()).as(SerdeType.class).orElseThrow().deserialize(message.getValue()));
+        builder.value(
+            applySchema ? this.deserializeWithSchema(message.getValue(), runContext)
+                : runContext.render(this.getDeserializer()).as(SerdeType.class).orElseThrow().deserialize(message.getValue())
+        );
 
         if (message.getEventTime() != 0) {
             builder.eventTime(Instant.ofEpochMilli(message.getEventTime()));

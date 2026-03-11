@@ -1,6 +1,16 @@
 package io.kestra.plugin.pulsar;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.Test;
+
 import com.google.common.collect.ImmutableMap;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
@@ -9,23 +19,15 @@ import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.repositories.LocalFlowRepositoryLoader;
 import io.kestra.core.runners.FlowListeners;
 import io.kestra.core.runners.RunContextFactory;
-import io.kestra.core.runners.Worker;
-import io.kestra.scheduler.AbstractScheduler;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.jdbc.runner.JdbcScheduler;
+import io.kestra.scheduler.AbstractScheduler;
 import io.kestra.worker.DefaultWorker;
+
 import io.micronaut.context.ApplicationContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -62,7 +64,8 @@ class RealtimeTriggerTest {
             );
         ) {
             // wait for execution
-            Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+            Flux<Execution> receive = TestsUtils.receive(executionQueue, execution ->
+            {
                 queueCount.countDown();
                 assertThat(execution.getLeft().getFlowId(), is("realtime"));
             });
@@ -73,12 +76,14 @@ class RealtimeTriggerTest {
                 .uri(Property.ofValue("pulsar://localhost:26650"))
                 .serializer(Property.ofValue(SerdeType.JSON))
                 .topic(Property.ofValue("tu_trigger"))
-                .from(List.of(
-                    ImmutableMap.builder()
-                        .put("key", "key1")
-                        .put("value", "value1")
-                        .build()
-                ))
+                .from(
+                    List.of(
+                        ImmutableMap.builder()
+                            .put("key", "key1")
+                            .put("value", "value1")
+                            .build()
+                    )
+                )
                 .build();
 
             worker.run();

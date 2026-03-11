@@ -1,5 +1,13 @@
 package io.kestra.plugin.pulsar;
 
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.pulsar.client.api.*;
+import org.reactivestreams.Publisher;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.conditions.ConditionContext;
@@ -7,17 +15,11 @@ import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.pulsar.client.api.*;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
-
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuperBuilder
 @ToString
@@ -53,7 +55,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
         )
     }
 )
-public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerInterface, TriggerOutput<Consume.PulsarMessage>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
+public class RealtimeTrigger extends AbstractTrigger
+    implements RealtimeTriggerInterface, TriggerOutput<Consume.PulsarMessage>, PulsarConnectionInterface, SubscriptionInterface, ReadInterface {
     private static final int DEFAULT_RECEIVE_TIMEOUT = 500;
 
     private Property<String> uri;
@@ -127,31 +130,32 @@ public class RealtimeTrigger extends AbstractTrigger implements RealtimeTriggerI
     }
 
     public Publisher<Consume.PulsarMessage> publisher(final Consume task, final RunContext runContext) {
-        return Flux.create(emitter -> {
-                try (PulsarClient client = PulsarService.client(task, runContext)) {
-                    ConsumerBuilder<byte[]> consumerBuilder = task.newConsumerBuilder(runContext, client);
-                    try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
-                        while (isActive.get()) {
-                            // wait for a new message before checking active flag.
-                            final Message<byte[]> received = consumer.receive(DEFAULT_RECEIVE_TIMEOUT, TimeUnit.MILLISECONDS);
-                            if (received != null) {
-                                try {
-                                    emitter.next(task.buildMessage(received, runContext));
-                                    consumer.acknowledge(received);
-                                } catch (Exception e) {
-                                    consumer.negativeAcknowledge(received);
-                                    throw e; // will be handled by the next catch.
-                                }
+        return Flux.create(emitter ->
+        {
+            try (PulsarClient client = PulsarService.client(task, runContext)) {
+                ConsumerBuilder<byte[]> consumerBuilder = task.newConsumerBuilder(runContext, client);
+                try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
+                    while (isActive.get()) {
+                        // wait for a new message before checking active flag.
+                        final Message<byte[]> received = consumer.receive(DEFAULT_RECEIVE_TIMEOUT, TimeUnit.MILLISECONDS);
+                        if (received != null) {
+                            try {
+                                emitter.next(task.buildMessage(received, runContext));
+                                consumer.acknowledge(received);
+                            } catch (Exception e) {
+                                consumer.negativeAcknowledge(received);
+                                throw e; // will be handled by the next catch.
                             }
                         }
                     }
-                } catch (Exception exception) {
-                    emitter.error(exception);
-                } finally {
-                    emitter.complete();
-                    waitForTermination.countDown();
                 }
-            });
+            } catch (Exception exception) {
+                emitter.error(exception);
+            } finally {
+                emitter.complete();
+                waitForTermination.countDown();
+            }
+        });
     }
 
     /**
