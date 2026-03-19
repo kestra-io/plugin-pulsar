@@ -2,7 +2,7 @@ id: all_pulsar
 namespace: sanitychecks.plugin-pulsar
 
 variables:
-  host: host.docker.internal
+  host: localhost
   topic: "persistent://public/default/kestra.sanity.{{ execution.id }}"
 
 tasks:
