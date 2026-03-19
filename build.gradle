@@ -104,9 +104,16 @@ dependencies {
     testImplementation group: "io.kestra", name: "tests", version: kestraVersion
     testImplementation group: "io.kestra", name: "repository-memory", version: kestraVersion
     testImplementation group: "io.kestra", name: "runner-memory", version: kestraVersion
+    testImplementation group: "io.kestra", name: "script", version: kestraVersion
     testImplementation group: "io.kestra", name: "storage-local", version: kestraVersion
     testImplementation group: "io.kestra", name: "scheduler"
     testImplementation group: "io.kestra", name: "worker"
+    testImplementation "io.kestra.plugin:plugin-docker:1.2.3"
+    testRuntimeOnly ('com.github.docker-java:docker-java') {
+        exclude group: 'com.github.docker-java', module: 'docker-java-transport-netty'
+        exclude group: 'com.github.docker-java', module: 'docker-java-transport-jersey'
+    }
+    testRuntimeOnly 'com.github.docker-java:docker-java-transport-httpclient5'
 
     // test
     testImplementation "org.junit.jupiter:junit-jupiter-engine"
