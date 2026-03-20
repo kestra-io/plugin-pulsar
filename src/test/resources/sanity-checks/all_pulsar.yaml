@@ -14,6 +14,7 @@ tasks:
 
   - id: docker_start
     type: io.kestra.plugin.docker.Run
+    networkMode: host
     containerImage: apachepulsar/pulsar
     entryPoint:
       - /pulsar/bin/pulsar
