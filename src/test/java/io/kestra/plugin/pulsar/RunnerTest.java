@@ -15,7 +15,7 @@ class RunnerTest {
     @Test
     @ExecuteFlow(value = "sanity-checks/all_pulsar.yaml", timeout = "PT180S")
     void all_pulsar(Execution execution) {
-        assertThat(execution.getTaskRunList(), hasSize(9));
+        assertThat(execution.getTaskRunList(), hasSize(10));
         assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
     }
 }
