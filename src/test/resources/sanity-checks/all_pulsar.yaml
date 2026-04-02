@@ -5,6 +5,12 @@ variables:
   topic: "persistent://public/default/kestra.sanity.{{ execution.id }}"
 
 tasks:
+  - id: init
+    type: io.kestra.plugin.core.output.OutputValues
+    values:
+      broker_port: "{{ randomPort() }}"
+      admin_port: "{{ randomPort() }}"
+
   - id: docker_start
     type: io.kestra.plugin.docker.Run
     containerImage: apachepulsar/pulsar
