@@ -10,6 +10,8 @@ services:
     command:
       - bin/pulsar
       - standalone
+      - --advertised-address
+      - localhost
   manager:
     image: apachepulsar/pulsar-manager
     environment:
