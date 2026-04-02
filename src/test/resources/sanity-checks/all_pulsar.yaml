@@ -14,8 +14,6 @@ tasks:
   - id: docker_start
     type: io.kestra.plugin.docker.Run
     containerImage: apachepulsar/pulsar
-    env:
-      PULSAR_MEM: "-Xms256m -Xmx512m -XX:MaxDirectMemorySize=512m"
     entryPoint:
       - /pulsar/bin/pulsar
     commands:
