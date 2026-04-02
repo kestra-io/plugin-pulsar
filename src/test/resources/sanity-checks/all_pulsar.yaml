@@ -20,6 +20,8 @@ tasks:
       - standalone
       - --advertised-address
       - localhost
+    env:
+      PULSAR_MEM: "-Xms256m -Xmx512m -XX:MaxDirectMemorySize=512m"
     portBindings:
       - "{{ outputs.init.values.broker_port }}:6650"
       - "{{ outputs.init.values.admin_port }}:8080"
@@ -27,7 +29,7 @@ tasks:
 
   - id: wait_pulsar
     type: io.kestra.plugin.core.flow.Sleep
-    duration: PT60S
+    duration: PT120S
 
   - id: produce
     type: io.kestra.plugin.pulsar.Produce
