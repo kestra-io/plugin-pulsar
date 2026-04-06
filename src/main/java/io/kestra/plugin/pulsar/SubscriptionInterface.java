@@ -9,6 +9,7 @@ import io.kestra.core.models.property.Property;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import io.kestra.core.models.annotations.PluginProperty;
 
 public interface SubscriptionInterface {
     @Schema(
@@ -16,6 +17,7 @@ public interface SubscriptionInterface {
         description = "Identifies the subscription so only unconsumed records for that subscription are fetched."
     )
     @NotNull
+    @PluginProperty(group = "main")
     Property<String> getSubscriptionName();
 
     @io.swagger.v3.oas.annotations.media.Schema(
