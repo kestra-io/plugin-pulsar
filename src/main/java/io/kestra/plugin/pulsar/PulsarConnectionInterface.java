@@ -12,12 +12,14 @@ public interface PulsarConnectionInterface {
         description = "One or more Pulsar protocol URLs, e.g. `pulsar://localhost:6650` or `pulsar://host1:6650,host2:6651`. Use `pulsar+ssl://` when enabling TLS."
     )
     @NotNull
+    @PluginProperty(group = "main")
     Property<String> getUri();
 
     @Schema(
         title = "Authentication token",
         description = "Token used when the broker requires token-based auth (e.g., hosted providers)."
     )
+    @PluginProperty(group = "connection")
     Property<String> getAuthenticationToken();
 
     @Schema(

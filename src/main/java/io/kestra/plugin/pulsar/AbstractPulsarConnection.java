@@ -6,6 +6,7 @@ import io.kestra.core.models.tasks.Task;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -23,6 +24,7 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
         title = "Topic schema definition",
         description = "JSON representation of the topic schema when schema enforcement is enabled."
     )
+    @PluginProperty(group = "advanced")
     protected Property<String> schemaString;
 
     @Schema(
@@ -30,6 +32,7 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
         description = "One of `NONE` (default, no enforcement), `AVRO`, or `JSON`."
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
 
     @Value

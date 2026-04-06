@@ -19,6 +19,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -79,6 +80,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
         title = "Target Pulsar topic"
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> topic;
 
     @Schema(
@@ -86,6 +88,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
         description = "Kestra internal storage URI, or map/list objects with optional `key`, `value`, `eventTime`, `properties`, `deliverAt`, `deliverAfter`, and `sequenceId` fields."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Object from;
 
     @Schema(
@@ -94,36 +97,42 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
     )
     @NotNull
     @Builder.Default
+    @PluginProperty(group = "main")
     private Property<SerdeType> serializer = Property.ofValue(SerdeType.STRING);
 
     @Schema(
         title = "Custom producer name",
         description = "Optional name reused on reconnects; may affect exclusive access checks."
     )
+    @PluginProperty(group = "advanced")
     private Property<String> producerName;
 
     @Schema(
         title = "Producer properties",
         description = "Key/value properties passed to the Pulsar producer builder."
     )
+    @PluginProperty(group = "advanced")
     private Property<Map<String, String>> producerProperties;
 
     @Schema(
         title = "Producer access mode",
         description = "`Shared` (default Pulsar behavior) allows multiple producers; `Exclusive` fails if another producer is connected; `WaitForExclusive` waits for exclusivity."
     )
+    @PluginProperty(group = "advanced")
     private Property<ProducerAccessMode> accessMode;
 
     @Schema(
         title = "Public encryption key",
         description = "PEM-encoded key used to encrypt the data key for message payload encryption."
     )
+    @PluginProperty(group = "connection")
     private Property<String> encryptionKey;
 
     @Schema(
         title = "Producer compression type",
         description = "Default `NONE`. Other options: `LZ4`, `ZLIB`, `ZSTD`, `SNAPPY`. Use to reduce payload size at the cost of CPU."
     )
+    @PluginProperty(group = "advanced")
     private Property<CompressionType> compressionType;
 
     @Override

@@ -12,12 +12,13 @@ public interface ReadInterface {
         description = "Single topic or list of topics to consume."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "main")
     Object getTopic();
 
     @Schema(
         title = "Value deserializer"
     )
     @NotNull
+    @PluginProperty(group = "main")
     Property<SerdeType> getDeserializer();
 }

@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import reactor.core.publisher.Flux;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -88,6 +89,7 @@ public class RealtimeTrigger extends AbstractTrigger
         title = "Topic schema definition",
         description = "JSON schema used when schema enforcement is enabled."
     )
+    @PluginProperty(group = "advanced")
     protected Property<String> schemaString;
 
     @Schema(
@@ -95,6 +97,7 @@ public class RealtimeTrigger extends AbstractTrigger
         description = "One of `NONE` (default), `AVRO`, or `JSON`."
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
 
     @Builder.Default

@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -54,12 +55,14 @@ public class Reader extends AbstractReader {
         title = "Rollback duration for start position",
         description = "Finds the latest message published before the given duration (e.g., `PT5M` starts 5 minutes in the past)."
     )
+    @PluginProperty(group = "advanced")
     private Property<Duration> since;
 
     @Schema(
         title = "Start from specific message ID",
         description = "Reads from the message immediately after the provided ID. If neither `since` nor `messageId` is set, starts at earliest."
     )
+    @PluginProperty(group = "advanced")
     private Property<String> messageId;
 
     @Override

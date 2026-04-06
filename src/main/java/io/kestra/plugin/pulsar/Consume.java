@@ -21,6 +21,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -51,18 +52,24 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
     }
 )
 public class Consume extends AbstractReader implements RunnableTask<AbstractReader.Output>, SubscriptionInterface {
+    @PluginProperty(group = "main")
     private Property<String> subscriptionName;
 
     @Builder.Default
+    @PluginProperty(group = "advanced")
     private Property<SubscriptionInitialPosition> initialPosition = Property.ofValue(SubscriptionInitialPosition.Earliest);
 
     @Builder.Default
+    @PluginProperty(group = "advanced")
     private Property<SubscriptionType> subscriptionType = Property.ofValue(SubscriptionType.Exclusive);
 
+    @PluginProperty(group = "advanced")
     private Property<Map<String, String>> consumerProperties;
 
+    @PluginProperty(group = "connection")
     private Property<String> encryptionKey;
 
+    @PluginProperty(group = "advanced")
     private Property<String> consumerName;
 
     @Override
@@ -160,6 +167,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
         private String key;
         private Object value;
         private Map<String, String> properties;
+        @PluginProperty(group = "main")
         private String topic;
         private Instant eventTime;
         private String messageId;

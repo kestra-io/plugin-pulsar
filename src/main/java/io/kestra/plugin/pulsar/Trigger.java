@@ -19,6 +19,7 @@ import io.kestra.core.runners.RunContext;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -103,6 +104,7 @@ public class Trigger extends AbstractTrigger
         title = "Topic schema definition",
         description = "JSON schema used when schema enforcement is enabled."
     )
+    @PluginProperty(group = "advanced")
     protected Property<String> schemaString;
 
     @Schema(
@@ -110,6 +112,7 @@ public class Trigger extends AbstractTrigger
         description = "One of `NONE` (default), `AVRO`, or `JSON`."
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
 
     @Override
