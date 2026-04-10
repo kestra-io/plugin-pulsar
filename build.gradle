@@ -23,7 +23,7 @@ repositories {
     }
 }
 
-final targetJavaVersion = JavaVersion.VERSION_21
+final targetJavaVersion = JavaVersion.VERSION_25
 
 java {
     sourceCompatibility = targetJavaVersion
@@ -108,6 +108,7 @@ dependencies {
     testImplementation group: "io.kestra", name: "storage-local", version: kestraVersion
     testImplementation group: "io.kestra", name: "scheduler"
     testImplementation group: "io.kestra", name: "worker"
+    testImplementation group: "io.kestra", name: "indexer", version: kestraVersion
     testImplementation "io.kestra.plugin:plugin-docker:1.2.3"
     testRuntimeOnly ('com.github.docker-java:docker-java') {
         exclude group: 'com.github.docker-java', module: 'docker-java-transport-netty'
