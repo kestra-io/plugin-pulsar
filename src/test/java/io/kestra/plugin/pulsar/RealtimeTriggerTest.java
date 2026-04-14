@@ -3,7 +3,6 @@ package io.kestra.plugin.pulsar;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -17,14 +16,8 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.repositories.LocalFlowRepositoryLoader;
-import io.kestra.core.runners.FlowListeners;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
-import io.kestra.jdbc.runner.JdbcScheduler;
-import io.kestra.scheduler.AbstractScheduler;
-import io.kestra.worker.DefaultWorker;
-
-import io.micronaut.context.ApplicationContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import reactor.core.publisher.Flux;
@@ -33,14 +26,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-@KestraTest
+@KestraTest(startRunner = true, startScheduler = true)
 class RealtimeTriggerTest {
-    @Inject
-    private ApplicationContext applicationContext;
-
-    @Inject
-    private FlowListeners flowListenersService;
-
     @Inject
     @Named(QueueFactoryInterface.EXECUTION_NAMED)
     private QueueInterface<Execution> executionQueue;
@@ -52,56 +39,40 @@ class RealtimeTriggerTest {
 
     @Test
     void flow() throws Exception {
-        // mock flow listeners
         CountDownLatch queueCount = new CountDownLatch(1);
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+            queueCount.countDown();
+            assertThat(execution.getLeft().getFlowId(), is("realtime"));
+        });
 
-        // scheduler
-        try (
-            DefaultWorker worker = applicationContext.createBean(DefaultWorker.class, UUID.randomUUID().toString(), 8, null);
-            AbstractScheduler scheduler = new JdbcScheduler(
-                this.applicationContext,
-                this.flowListenersService
-            );
-        ) {
-            // wait for execution
-            Flux<Execution> receive = TestsUtils.receive(executionQueue, execution ->
-            {
-                queueCount.countDown();
-                assertThat(execution.getLeft().getFlowId(), is("realtime"));
-            });
-
-            Produce task = Produce.builder()
-                .id(RealtimeTriggerTest.class.getSimpleName())
-                .type(Produce.class.getName())
-                .uri(Property.ofValue("pulsar://localhost:26650"))
-                .serializer(Property.ofValue(SerdeType.JSON))
-                .topic(Property.ofValue("tu_trigger"))
-                .from(
-                    List.of(
-                        ImmutableMap.builder()
-                            .put("key", "key1")
-                            .put("value", "value1")
-                            .build()
-                    )
+        Produce task = Produce.builder()
+            .id(RealtimeTriggerTest.class.getSimpleName())
+            .type(Produce.class.getName())
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .serializer(Property.ofValue(SerdeType.JSON))
+            .topic(Property.ofValue("tu_trigger"))
+            .from(
+                List.of(
+                    ImmutableMap.builder()
+                        .put("key", "key1")
+                        .put("value", "value1")
+                        .build()
                 )
-                .build();
+            )
+            .build();
 
-            worker.run();
-            scheduler.run();
+        repositoryLoader.load(Objects.requireNonNull(RealtimeTriggerTest.class.getClassLoader().getResource("flows/realtime.yaml")));
 
-            repositoryLoader.load(Objects.requireNonNull(RealtimeTriggerTest.class.getClassLoader().getResource("flows/realtime.yaml")));
+        task.run(TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of()));
 
-            task.run(TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of()));
+        boolean await = queueCount.await(1, TimeUnit.MINUTES);
+        assertThat(await, is(true));
 
-            boolean await = queueCount.await(1, TimeUnit.MINUTES);
-            assertThat(await, is(true));
+        Map<String, Object> variables = receive.blockLast().getTrigger().getVariables();
 
-            Map<String, Object> variables = receive.blockLast().getTrigger().getVariables();
-
-            assertThat(variables.get("key"), is("key1"));
-            assertThat(variables.get("value"), is("value1"));
-            assertThat(variables.get("topic"), is("persistent://public/default/tu_trigger"));
-            assertThat(variables.get("messageId"), notNullValue());
-        }
+        assertThat(variables.get("key"), is("key1"));
+        assertThat(variables.get("value"), is("value1"));
+        assertThat(variables.get("topic"), is("persistent://public/default/tu_trigger"));
+        assertThat(variables.get("messageId"), notNullValue());
     }
 }
