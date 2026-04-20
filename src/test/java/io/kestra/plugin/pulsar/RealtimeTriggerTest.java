@@ -5,22 +5,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.queues.QueueFactoryInterface;
-import io.kestra.core.queues.QueueInterface;
+import io.kestra.core.queues.DispatchQueueInterface;
 import io.kestra.core.repositories.LocalFlowRepositoryLoader;
 import io.kestra.core.runners.RunContextFactory;
-import io.kestra.core.utils.TestsUtils;
+
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -29,23 +25,32 @@ import static org.hamcrest.Matchers.notNullValue;
 @KestraTest(startRunner = true, startScheduler = true)
 class RealtimeTriggerTest {
     @Inject
-    @Named(QueueFactoryInterface.EXECUTION_NAMED)
-    private QueueInterface<Execution> executionQueue;
+    private RunContextFactory runContextFactory;
+
+    @Inject
+    private DispatchQueueInterface<Execution> executionQueue;
 
     @Inject
     protected LocalFlowRepositoryLoader repositoryLoader;
-    @Inject
-    private RunContextFactory runContextFactory;
 
     @Test
     void flow() throws Exception {
-        CountDownLatch queueCount = new CountDownLatch(1);
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+        var queueCount = new CountDownLatch(1);
+        var last = new AtomicReference<Execution>();
+
+        executionQueue.addListener(execution -> {
+            last.set(execution);
             queueCount.countDown();
-            assertThat(execution.getLeft().getFlowId(), is("realtime"));
+            assertThat(execution.getFlowId(), is("realtime"));
         });
 
-        Produce task = Produce.builder()
+        repositoryLoader.load(
+            Objects.requireNonNull(
+                RealtimeTriggerTest.class.getClassLoader().getResource("flows/realtime.yaml")
+            )
+        );
+
+        var task = Produce.builder()
             .id(RealtimeTriggerTest.class.getSimpleName())
             .type(Produce.class.getName())
             .uri(Property.ofValue("pulsar://localhost:26650"))
@@ -53,23 +58,18 @@ class RealtimeTriggerTest {
             .topic(Property.ofValue("tu_trigger"))
             .from(
                 List.of(
-                    ImmutableMap.builder()
-                        .put("key", "key1")
-                        .put("value", "value1")
-                        .build()
+                    Map.of(
+                        "key", "key1",
+                        "value", "value1"
+                    )
                 )
             )
             .build();
 
-        repositoryLoader.load(Objects.requireNonNull(RealtimeTriggerTest.class.getClassLoader().getResource("flows/realtime.yaml")));
+        task.run(runContextFactory.of(Map.of()));
+        assertThat(queueCount.await(1, TimeUnit.MINUTES), is(true));
 
-        task.run(TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of()));
-
-        boolean await = queueCount.await(1, TimeUnit.MINUTES);
-        assertThat(await, is(true));
-
-        Map<String, Object> variables = receive.blockLast().getTrigger().getVariables();
-
+        var variables = last.get().getTrigger().getVariables();
         assertThat(variables.get("key"), is("key1"));
         assertThat(variables.get("value"), is("value1"));
         assertThat(variables.get("topic"), is("persistent://public/default/tu_trigger"));
