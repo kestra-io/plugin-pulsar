@@ -62,6 +62,7 @@ public class Trigger extends AbstractTrigger
 
     private Property<String> uri;
 
+    @PluginProperty(secret = true)
     private Property<String> authenticationToken;
 
     private AbstractPulsarConnection.TlsOptions tlsOptions;
