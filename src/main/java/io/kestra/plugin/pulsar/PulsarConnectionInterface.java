@@ -19,7 +19,7 @@ public interface PulsarConnectionInterface {
         title = "Authentication token",
         description = "Token used when the broker requires token-based auth (e.g., hosted providers)."
     )
-    @PluginProperty(group = "connection")
+    @PluginProperty(secret = true, group = "connection")
     Property<String> getAuthenticationToken();
 
     @Schema(
