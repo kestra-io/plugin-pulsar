@@ -16,7 +16,6 @@ import io.kestra.core.models.annotations.PluginProperty;
 public abstract class AbstractPulsarConnection extends Task implements PulsarConnectionInterface {
     private Property<String> uri;
 
-    @PluginProperty(secret = true)
     private Property<String> authenticationToken;
 
     private TlsOptions tlsOptions;
