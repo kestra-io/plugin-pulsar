@@ -20,6 +20,8 @@ tasks:
       - standalone
       - --advertised-address
       - localhost
+      - --no-functions-worker
+      - --no-stream-storage
     env:
       PULSAR_MEM: "-Xms1g -Xmx2g -XX:MaxDirectMemorySize=1g"
     portBindings:
