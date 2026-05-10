@@ -12,7 +12,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 @KestraTest(startRunner = true)
-@Disabled("Pulsar standalone in docker.Run does not become ready on CI runners; the sanity flow is exercised on the daily Kestra instance run")
+@Disabled("Disabled due to ERROR: JDBC Connection issue")
 class RunnerTest {
     @Test
     @ExecuteFlow(value = "sanity-checks/all_pulsar.yaml", timeout = "PT540S")
