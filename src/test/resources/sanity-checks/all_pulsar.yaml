@@ -29,7 +29,7 @@ tasks:
 
   - id: wait_pulsar
     type: io.kestra.plugin.core.flow.Sleep
-    duration: PT120S
+    duration: PT180S
 
   - id: produce
     type: io.kestra.plugin.pulsar.Produce
