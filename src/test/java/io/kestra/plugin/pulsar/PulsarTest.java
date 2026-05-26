@@ -87,9 +87,9 @@ public class PulsarTest {
         Consume.Output consumeOutput = consume.run(runContext);
         assertThat(consumeOutput.getMessagesCount(), is(50));
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(TenantService.MAIN_TENANT, null, consumeOutput.getUri())));
+        BufferedInputStream inputStream = new BufferedInputStream(storageInterface.get(TenantService.MAIN_TENANT, null, consumeOutput.getUri()), FileSerde.BUFFER_SIZE);
         List<Map<String, Object>> result = new ArrayList<>();
-        FileSerde.reader(inputStream, r -> result.add((Map<String, Object>) r));
+        FileSerde.read(inputStream, r -> result.add((Map<String, Object>) r));
 
         assertThat(result.size(), is(50));
 
@@ -124,9 +124,9 @@ public class PulsarTest {
         Reader.Output consumeOutput = reader.run(runContext);
         assertThat(consumeOutput.getMessagesCount(), is(50));
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(TenantService.MAIN_TENANT, null, consumeOutput.getUri())));
+        BufferedInputStream inputStream = new BufferedInputStream(storageInterface.get(TenantService.MAIN_TENANT, null, consumeOutput.getUri()), FileSerde.BUFFER_SIZE);
         List<Map<String, Object>> result = new ArrayList<>();
-        FileSerde.reader(inputStream, r -> result.add((Map<String, Object>) r));
+        FileSerde.read(inputStream, r -> result.add((Map<String, Object>) r));
 
         assertThat(result.size(), is(50));
 

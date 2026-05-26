@@ -1,7 +1,6 @@
 package io.kestra.plugin.pulsar;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.BufferedInputStream;
 import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -112,7 +111,7 @@ public abstract class AbstractProducer<T> {
             Flux<Integer> resultFlowable;
             if (from instanceof String) {
                 URI uri = new URI(runContext.render((String) from));
-                try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.storage().getFile(uri)))) {
+                try (BufferedInputStream inputStream = new BufferedInputStream(runContext.storage().getFile(uri), FileSerde.BUFFER_SIZE)) {
                     flowable = FileSerde.readAll(inputStream);
                     resultFlowable = this.buildFlowable(flowable);
 
