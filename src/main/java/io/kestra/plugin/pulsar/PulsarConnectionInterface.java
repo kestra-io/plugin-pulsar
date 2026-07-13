@@ -26,6 +26,6 @@ public interface PulsarConnectionInterface {
         title = "TLS options",
         description = "Certificate/key material for TLS client authentication. Requires a `pulsar+ssl://` URL."
     )
-    @PluginProperty(dynamic = false)
+    @PluginProperty(dynamic = false, group = "connection")
     AbstractPulsarConnection.TlsOptions getTlsOptions();
 }

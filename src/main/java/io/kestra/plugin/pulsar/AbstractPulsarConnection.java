@@ -16,6 +16,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 public abstract class AbstractPulsarConnection extends Task implements PulsarConnectionInterface {
     private Property<String> uri;
 
+    @ToString.Exclude
     private Property<String> authenticationToken;
 
     private TlsOptions tlsOptions;
@@ -37,6 +38,7 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
 
     @Value
     public static class TlsOptions {
+        @ToString.Exclude
         @Schema(
             title = "Client certificate",
             description = "Base64-encoded PEM content for the client certificate."
@@ -44,6 +46,7 @@ public abstract class AbstractPulsarConnection extends Task implements PulsarCon
         )
         Property<String> cert;
 
+        @ToString.Exclude
         @Schema(
             title = "Client key",
             description = "Base64-encoded PEM private key matching the client certificate."

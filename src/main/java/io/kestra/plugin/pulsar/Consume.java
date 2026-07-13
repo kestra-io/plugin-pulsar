@@ -164,12 +164,23 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
     @Getter
     @Builder
     public static class PulsarMessage implements io.kestra.core.models.tasks.Output {
+        @Schema(title = "The message key")
         private String key;
+
+        @Schema(title = "The message value")
         private Object value;
+
+        @Schema(title = "The message properties")
         private Map<String, String> properties;
+
+        @Schema(title = "The topic the message belongs to")
         @PluginProperty(group = "main")
         private String topic;
+
+        @Schema(title = "The message event time")
         private Instant eventTime;
+
+        @Schema(title = "The message id")
         private String messageId;
     }
 }
