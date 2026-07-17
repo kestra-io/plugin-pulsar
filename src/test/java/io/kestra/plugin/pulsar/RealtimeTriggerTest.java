@@ -10,7 +10,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 import io.kestra.core.junit.annotations.KestraTest;
+import java.time.Duration;
 import io.kestra.core.models.executions.Execution;
+import io.kestra.core.runners.TestRunnerUtils;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.DispatchQueueInterface;
 import io.kestra.core.repositories.LocalFlowRepositoryLoader;
@@ -19,7 +21,9 @@ import io.kestra.core.runners.RunContextFactory;
 import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.is;
+import static io.kestra.core.tenant.TenantService.MAIN_TENANT;
 import static org.hamcrest.Matchers.notNullValue;
 
 @KestraTest(startRunner = true, startScheduler = true)
@@ -31,19 +35,13 @@ class RealtimeTriggerTest {
     private DispatchQueueInterface<Execution> executionQueue;
 
     @Inject
+    private TestRunnerUtils runnerUtils;
+
+    @Inject
     protected LocalFlowRepositoryLoader repositoryLoader;
 
     @Test
     void flow() throws Exception {
-        var queueCount = new CountDownLatch(1);
-        var last = new AtomicReference<Execution>();
-
-        executionQueue.addListener(execution -> {
-            last.set(execution);
-            queueCount.countDown();
-            assertThat(execution.getFlowId(), is("realtime"));
-        });
-
         repositoryLoader.load(
             Objects.requireNonNull(
                 RealtimeTriggerTest.class.getClassLoader().getResource("flows/realtime.yaml")
@@ -67,9 +65,10 @@ class RealtimeTriggerTest {
             .build();
 
         task.run(runContextFactory.of(Map.of()));
-        assertThat(queueCount.await(1, TimeUnit.MINUTES), is(true));
+        Execution last = runnerUtils.awaitFlowExecution(e -> true, MAIN_TENANT, "io.kestra.tests", "realtime", Duration.ofMinutes(1));
+        assertThat(last, notNullValue());
 
-        var variables = last.get().getTrigger().getVariables();
+        var variables = last.getTrigger().getVariables();
         assertThat(variables.get("key"), is("key1"));
         assertThat(variables.get("value"), is("value1"));
         assertThat(variables.get("topic"), is("persistent://public/default/tu_trigger"));
