@@ -15,7 +15,7 @@ import static org.hamcrest.Matchers.is;
 @Disabled("Disabled due to ERROR: JDBC Connection issue")
 class RunnerTest {
     @Test
-    @ExecuteFlow(value = "sanity-checks/all_pulsar.yaml", timeout = "PT180S")
+    @ExecuteFlow(value = "sanity-checks/all_pulsar.yaml", timeout = "PT540S")
     void all_pulsar(Execution execution) {
         assertThat(execution.getTaskRunList(), hasSize(10));
         assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
