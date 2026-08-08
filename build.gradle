@@ -10,7 +10,7 @@ plugins {
     id "com.adarshr.test-logger" version "4.0.0"
     id "com.gradleup.shadow" version "9.6.1"
     id 'signing'
-    id "com.github.ben-manes.versions" version "0.56.0"
+    id "com.github.ben-manes.versions" version "0.60.0"
     id 'net.researchgate.release' version '3.1.0'
 }
 
@@ -59,7 +59,7 @@ dependencies {
     compileOnly group: "io.kestra", name: "core", version: kestraVersion
 
     // libs included in the final jar
-    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.2.3') {
+    api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.2.2') {
         exclude group: 'com.fasterxml.jackson.core'
     }
 }
@@ -96,7 +96,7 @@ dependencies {
     testImplementation "io.micronaut.test:micronaut-test-junit5"
     testImplementation "io.micronaut.reactor:micronaut-reactor"
 
-    testImplementation(group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '4.2.3') {
+    testImplementation(group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '4.2.2') {
         exclude group: 'com.fasterxml.jackson.core'
     }
 
@@ -110,7 +110,7 @@ dependencies {
     testImplementation group: "io.kestra", name: "storage-local", version: kestraVersion
     testImplementation group: "io.kestra", name: "scheduler"
     testImplementation group: "io.kestra", name: "worker"
-    testImplementation "io.kestra.plugin:plugin-docker:1.5.2"
+    testImplementation "io.kestra.plugin:plugin-docker:1.5.1"
     testRuntimeOnly ('com.github.docker-java:docker-java') {
         exclude group: 'com.github.docker-java', module: 'docker-java-transport-netty'
         exclude group: 'com.github.docker-java', module: 'docker-java-transport-jersey'
