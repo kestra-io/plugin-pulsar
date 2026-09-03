@@ -4,7 +4,7 @@ Produce and consume messages on Apache Pulsar topics from Kestra flows, with sup
 
 ## Common properties
 
-Set `uri` to your Pulsar service URL (`pulsar://` for plain, `pulsar+ssl://` for TLS). For token authentication, set `authenticationToken`. For mutual TLS, provide `tlsOptions.cert`, `tlsOptions.key`, and `tlsOptions.ca` as base64-encoded PEM content. Apply connection properties globally with [plugin defaults](https://kestra.io/docs/workflow-components/plugin-defaults) and store secrets in [secrets](https://kestra.io/docs/concepts/secret).
+Set `uri` to your Pulsar service URL (`pulsar://` for plain, `pulsar+ssl://` for TLS). For token authentication, set `authenticationToken`. For mutual TLS, provide `tlsOptions.cert`, `tlsOptions.key`, and `tlsOptions.ca` as base64-encoded PEM content. Set connection properties on each task and store secrets in [secrets](https://kestra.io/docs/concepts/secret).
 
 ## Tasks
 
