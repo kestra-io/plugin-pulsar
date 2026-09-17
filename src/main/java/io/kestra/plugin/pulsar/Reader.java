@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.PulsarClientException;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -81,19 +82,35 @@ public class Reader extends AbstractReader {
             }
 
             try (org.apache.pulsar.client.api.Reader<byte[]> reader = readerBuilder.create()) {
-                return this.read(
-                    runContext,
-                    Rethrow.throwSupplier(() ->
-                    {
-                        Message<byte[]> message = reader.readNext(runContext.render(this.getPollDuration()).as(Duration.class).orElseThrow().getNano(), TimeUnit.NANOSECONDS);
+                this.trackCloseable(reader);
 
-                        if (message == null) {
-                            return List.of();
-                        } else {
-                            return List.of(message);
-                        }
-                    })
-                );
+                try {
+                    return this.read(
+                        runContext,
+                        Rethrow.throwSupplier(() ->
+                        {
+                            try {
+                                Message<byte[]> message = reader.readNext(runContext.render(this.getPollDuration()).as(Duration.class).orElseThrow().getNano(), TimeUnit.NANOSECONDS);
+
+                                if (message == null) {
+                                    return List.of();
+                                } else {
+                                    return List.of(message);
+                                }
+                            } catch (PulsarClientException.AlreadyClosedException e) {
+                                // the reader was closed by kill() while blocked here: end the read loop
+                                // instead of failing the task, since a kill is a normal way to stop.
+                                if (!this.isActive()) {
+                                    return List.of();
+                                }
+
+                                throw e;
+                            }
+                        })
+                    );
+                } finally {
+                    this.untrackCloseable();
+                }
             }
         }
     }

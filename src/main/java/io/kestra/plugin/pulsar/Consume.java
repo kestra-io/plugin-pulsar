@@ -2,6 +2,7 @@ package io.kestra.plugin.pulsar;
 
 import java.time.Instant;
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -78,27 +79,41 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
             ConsumerBuilder<byte[]> consumerBuilder = newConsumerBuilder(runContext, client);
 
             try (Consumer<byte[]> consumer = consumerBuilder.subscribe()) {
-                return this.read(
-                    runContext,
-                    Rethrow.throwSupplier(() ->
-                    {
-                        try {
-                            Messages<byte[]> messages = consumer.batchReceive();
+                this.trackCloseable(consumer);
 
-                            return StreamSupport
-                                .stream(messages.spliterator(), false)
-                                .map(Rethrow.throwFunction(message ->
-                                {
-                                    consumer.acknowledge(message);
+                try {
+                    return this.read(
+                        runContext,
+                        Rethrow.throwSupplier(() ->
+                        {
+                            try {
+                                Messages<byte[]> messages = consumer.batchReceive();
 
-                                    return message;
-                                }))
-                                .collect(Collectors.toList());
-                        } catch (Throwable e) {
-                            throw new Exception(e);
-                        }
-                    })
-                );
+                                return StreamSupport
+                                    .stream(messages.spliterator(), false)
+                                    .map(Rethrow.throwFunction(message ->
+                                    {
+                                        consumer.acknowledge(message);
+
+                                        return message;
+                                    }))
+                                    .collect(Collectors.toList());
+                            } catch (PulsarClientException.AlreadyClosedException e) {
+                                // the consumer was closed by kill() while blocked here: end the read loop
+                                // instead of failing the task, since a kill is a normal way to stop.
+                                if (!this.isActive()) {
+                                    return List.of();
+                                }
+
+                                throw new Exception(e);
+                            } catch (Throwable e) {
+                                throw new Exception(e);
+                            }
+                        })
+                    );
+                } finally {
+                    this.untrackCloseable();
+                }
             }
         }
     }

@@ -3,10 +3,13 @@ package io.kestra.plugin.pulsar;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.slf4j.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -115,6 +118,17 @@ public class Trigger extends AbstractTrigger
     @PluginProperty(group = "advanced")
     protected Property<SchemaType> schemaType = Property.ofValue(SchemaType.NONE);
 
+    /**
+     * The {@link Consume} task backing the current {@link #evaluate(ConditionContext, TriggerContext)}
+     * call, so that {@link #kill()}/{@link #stop()} (invoked from a different thread) can forward the
+     * signal to it. Null outside of an active evaluation.
+     */
+    @JsonIgnore
+    @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private final AtomicReference<Consume> activeTask = new AtomicReference<>();
+
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         RunContext runContext = conditionContext.getRunContext();
@@ -140,7 +154,15 @@ public class Trigger extends AbstractTrigger
             .schemaString(this.schemaString)
             .schemaType(this.schemaType)
             .build();
-        Consume.Output run = task.run(runContext);
+
+        this.activeTask.set(task);
+
+        Consume.Output run;
+        try {
+            run = task.run(runContext);
+        } finally {
+            this.activeTask.set(null);
+        }
 
         if (logger.isDebugEnabled()) {
             logger.debug("Found '{}' messages from '{}'", run.getMessagesCount(), task.topics(runContext));
@@ -153,5 +175,21 @@ public class Trigger extends AbstractTrigger
         Execution execution = TriggerService.generateExecution(this, conditionContext, context, run);
 
         return Optional.of(execution);
+    }
+
+    @Override
+    public void kill() {
+        Consume task = this.activeTask.get();
+        if (task != null) {
+            task.kill();
+        }
+    }
+
+    @Override
+    public void stop() {
+        Consume task = this.activeTask.get();
+        if (task != null) {
+            task.stop();
+        }
     }
 }
