@@ -89,8 +89,19 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     @Getter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    @Builder.Default
     private final AtomicBoolean isActive = new AtomicBoolean(true);
+
+    /**
+     * Guards {@link #closeTracked()} independently of {@link #isActive}, so that an escalation from
+     * {@code stop()} to {@code kill()} still forces the tracked consumer/reader closed: {@code stop()}
+     * alone already flips {@code isActive} to {@code false}, and a shared guard on that flag would make
+     * a subsequent {@code kill()} a no-op, leaving a blocked receive call uninterrupted.
+     */
+    @JsonIgnore
+    @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private final AtomicBoolean isKilled = new AtomicBoolean(false);
 
     /**
      * The live Pulsar {@code Consumer}/{@code Reader} currently in use, tracked so that {@link #kill()}
@@ -100,7 +111,6 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     @Getter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    @Builder.Default
     private final AtomicReference<AutoCloseable> trackedCloseable = new AtomicReference<>();
 
     protected boolean isActive() {
@@ -119,9 +129,16 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
         this.trackedCloseable.set(null);
     }
 
+    /** Package-private, exposed only so tests can assert on the real tracked consumer/reader. */
+    AutoCloseable trackedCloseable() {
+        return this.trackedCloseable.get();
+    }
+
     @Override
     public void kill() {
-        if (this.isActive.compareAndSet(true, false)) {
+        this.isActive.set(false);
+
+        if (this.isKilled.compareAndSet(false, true)) {
             LOG.info("Received a kill signal, closing the Pulsar consumer/reader");
             this.closeTracked();
         }

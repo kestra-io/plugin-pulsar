@@ -7,6 +7,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.pulsar.client.api.Consumer;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -92,6 +93,50 @@ public class KillableTaskTest {
         Thread.sleep(1000);
 
         reader.kill();
+
+        assertThat(latch.await(10, TimeUnit.SECONDS), is(true));
+    }
+
+    @Test
+    void consumeStopThenKillStillForcesTheTrackedConsumerClosed() throws Exception {
+        RunContext runContext = runContextFactory.of(ImmutableMap.of());
+        String topic = "tu_" + IdUtils.create();
+
+        Consume consume = Consume.builder()
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .subscriptionName(Property.ofValue(IdUtils.create()))
+            .topic(topic)
+            .maxDuration(Property.ofValue(Duration.ofHours(1)))
+            .build();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        Thread thread = new Thread(() -> {
+            try {
+                consume.run(runContext);
+            } catch (Exception ignored) {
+                // either a normal return or an exception is an acceptable prompt end
+            } finally {
+                latch.countDown();
+            }
+        });
+        thread.start();
+
+        // let the consumer subscribe and register itself via trackCloseable() before signaling
+        Thread.sleep(1000);
+
+        @SuppressWarnings("unchecked")
+        Consumer<byte[]> consumer = (Consumer<byte[]>) consume.trackedCloseable();
+        assertThat(consumer, is(notNullValue()));
+        assertThat("the consumer must still be open before any signal", consumer.isConnected(), is(true));
+
+        // stop() alone (server shutdown) must let the batch finish without closing the consumer
+        consume.stop();
+        assertThat("stop() must not force-close the tracked consumer", consumer.isConnected(), is(true));
+
+        // an escalation to kill() (execution killed/timeout) after a prior stop() must still force-close
+        // the tracked consumer, since it may be needed to unblock an in-flight blocking receive call
+        consume.kill();
+        assertThat("kill() must force-close the tracked consumer even after a prior stop()", consumer.isConnected(), is(false));
 
         assertThat(latch.await(10, TimeUnit.SECONDS), is(true));
     }
