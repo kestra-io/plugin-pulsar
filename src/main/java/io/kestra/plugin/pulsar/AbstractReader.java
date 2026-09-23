@@ -9,7 +9,9 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import org.apache.pulsar.client.api.Message;
@@ -17,6 +19,10 @@ import org.apache.pulsar.shade.org.apache.avro.Schema;
 import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumReader;
 import org.apache.pulsar.shade.org.apache.avro.generic.GenericDatumWriter;
 import org.apache.pulsar.shade.org.apache.avro.io.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Metric;
@@ -51,6 +57,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 public abstract class AbstractReader extends AbstractPulsarConnection implements ReadInterface, PollingInterface, RunnableTask<AbstractReader.Output> {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractReader.class);
+
     private Object topic;
 
     @Builder.Default
@@ -71,6 +79,94 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
     )
     private Property<Duration> maxDuration;
 
+    /**
+     * Cooperative exit flag flipped by {@link #kill()} or {@link #stop()}. The read loop in
+     * {@link #read(RunContext, Supplier)} checks it to end the current run promptly instead of waiting
+     * for {@code maxDuration}/{@code maxRecords}, since {@code kill()}/{@code stop()} are invoked from a
+     * different thread than the one running the task.
+     */
+    @JsonIgnore
+    @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private final AtomicBoolean isActive = new AtomicBoolean(true);
+
+    /**
+     * Guards {@link #closeTracked()} independently of {@link #isActive}, so that an escalation from
+     * {@code stop()} to {@code kill()} still forces the tracked consumer/reader closed: {@code stop()}
+     * alone already flips {@code isActive} to {@code false}, and a shared guard on that flag would make
+     * a subsequent {@code kill()} a no-op, leaving a blocked receive call uninterrupted.
+     */
+    @JsonIgnore
+    @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private final AtomicBoolean isKilled = new AtomicBoolean(false);
+
+    /**
+     * The live Pulsar {@code Consumer}/{@code Reader} currently in use, tracked so that {@link #kill()}
+     * can close it and unblock an in-flight blocking receive call.
+     */
+    @JsonIgnore
+    @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private final AtomicReference<AutoCloseable> trackedCloseable = new AtomicReference<>();
+
+    protected boolean isActive() {
+        return this.isActive.get();
+    }
+
+    /**
+     * Registers the currently open consumer/reader so that a kill signal can close it. Must be paired
+     * with {@link #untrackCloseable()} once the caller is done with it.
+     */
+    protected void trackCloseable(AutoCloseable closeable) {
+        this.trackedCloseable.set(closeable);
+    }
+
+    protected void untrackCloseable() {
+        this.trackedCloseable.set(null);
+    }
+
+    /** Package-private, exposed only so tests can assert on the real tracked consumer/reader. */
+    AutoCloseable trackedCloseable() {
+        return this.trackedCloseable.get();
+    }
+
+    @Override
+    public void kill() {
+        this.isActive.set(false);
+
+        if (this.isKilled.compareAndSet(false, true)) {
+            LOG.info("Received a kill signal, closing the Pulsar consumer/reader");
+            this.closeTracked();
+        }
+    }
+
+    @Override
+    public void stop() {
+        if (this.isActive.compareAndSet(true, false)) {
+            LOG.info("Received a stop signal, the current batch will complete and the task will end");
+        }
+    }
+
+    private void closeTracked() {
+        AutoCloseable closeable = this.trackedCloseable.getAndSet(null);
+        if (closeable == null) {
+            return;
+        }
+
+        try {
+            closeable.close();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOG.warn("Interrupted while closing the Pulsar consumer/reader", e);
+        } catch (Exception e) {
+            LOG.warn("Failed to close the Pulsar consumer/reader", e);
+        }
+    }
+
     public Output read(RunContext runContext, Supplier<List<Message<byte[]>>> supplier) throws Exception {
         File tempFile = runContext.workingDir().createTempFile(".ion").toFile();
         Map<String, Integer> count = new HashMap<>();
@@ -80,6 +176,10 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
 
         try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tempFile))) {
             do {
+                if (!this.isActive()) {
+                    break;
+                }
+
                 for (Message<byte[]> message : supplier.get()) {
                     boolean applySchema = runContext.render(this.schemaType).as(SchemaType.class).orElseThrow() != SchemaType.NONE;
                     if (applySchema && this.schemaString == null) {
@@ -106,6 +206,10 @@ public abstract class AbstractReader extends AbstractPulsarConnection implements
                     count.compute(message.getTopicName(), (s, integer) -> integer == null ? 1 : integer + 1);
                     lastPool = ZonedDateTime.now();
 
+                }
+
+                if (!this.isActive()) {
+                    break;
                 }
             } while (!this.ended(total, started, lastPool, runContext));
 
