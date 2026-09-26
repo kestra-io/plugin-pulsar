@@ -12,7 +12,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 @KestraTest(startRunner = true)
-@Disabled("Disabled due to ERROR: JDBC Connection issue")
 class RunnerTest {
     @Test
     @ExecuteFlow(value = "sanity-checks/all_pulsar.yaml", timeout = "PT180S")
