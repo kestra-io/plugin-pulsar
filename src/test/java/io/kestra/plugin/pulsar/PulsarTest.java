@@ -155,6 +155,10 @@ public class PulsarTest {
                         )
                     )
                     .put("timestamp", Instant.now().toEpochMilli())
+                    .put("sequenceId", 1)
+                    .put("eventTime", 1)
+                    .put("deliverAt", 1)
+                    .put("deliverAfter", 1)
                     .build()
             )
             .build();

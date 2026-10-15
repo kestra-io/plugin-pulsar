@@ -172,18 +172,18 @@ public abstract class AbstractProducer<T> {
         }
 
         if (renderedMap.containsKey("sequenceId")) {
-            message.sequenceId((long) renderedMap.get("sequenceId"));
+            message.sequenceId(((Number) renderedMap.get("sequenceId")).longValue());
         }
         return message.sendAsync();
     }
 
     private Long processTimestamp(Object timestamp) {
-        if (timestamp == null) {
-            return null;
+        if (timestamp instanceof Number number){
+            return number.longValue();
         }
 
-        if (timestamp instanceof Long) {
-            return (Long) timestamp;
+        if (timestamp == null) {
+            return null;
         }
 
         if (timestamp instanceof ZonedDateTime) {
