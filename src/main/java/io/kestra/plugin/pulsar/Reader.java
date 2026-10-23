@@ -1,5 +1,6 @@
 package io.kestra.plugin.pulsar;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -9,6 +10,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.impl.MessageIdImpl;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -61,7 +63,7 @@ public class Reader extends AbstractReader {
 
     @Schema(
         title = "Start from specific message ID",
-        description = "Reads from the message immediately after the provided ID. If neither `since` nor `messageId` is set, starts at earliest."
+        description = "Reads from the message immediately after the provided ID. Accepts `ledger:entry[:partition]`, `earliest`, `latest`, or the existing Pulsar byte form. If neither `since` nor `messageId` is set, starts at earliest."
     )
     @PluginProperty(group = "advanced")
     private Property<String> messageId;
@@ -76,7 +78,7 @@ public class Reader extends AbstractReader {
             if (duration.isPresent()) {
                 readerBuilder.startMessageFromRollbackDuration(duration.get().getNano(), TimeUnit.NANOSECONDS);
             } else if (this.messageId != null) {
-                readerBuilder.startMessageId(MessageId.fromByteArray(runContext.render(this.messageId).as(String.class).orElseThrow().getBytes(StandardCharsets.UTF_8)));
+                readerBuilder.startMessageId(parseMessageId(runContext.render(this.messageId).as(String.class).orElseThrow()));
             } else {
                 readerBuilder.startMessageId(MessageId.earliest);
             }
@@ -113,5 +115,29 @@ public class Reader extends AbstractReader {
                 }
             }
         }
+    }
+
+    static MessageId parseMessageId(String text) throws IOException {
+        String value = text.trim();
+        if (value.equalsIgnoreCase("earliest")) {
+            return MessageId.earliest;
+        }
+        if (value.equalsIgnoreCase("latest")) {
+            return MessageId.latest;
+        }
+
+        String[] parts = value.split(":", -1);
+        if (parts.length == 2 || parts.length == 3) {
+            try {
+                long ledgerId = Long.parseLong(parts[0]);
+                long entryId = Long.parseLong(parts[1]);
+                int partitionIndex = parts.length == 3 ? Integer.parseInt(parts[2]) : -1;
+                return new MessageIdImpl(ledgerId, entryId, partitionIndex);
+            } catch (NumberFormatException ignored) {
+                // Fall back to the existing byte form below.
+            }
+        }
+
+        return MessageId.fromByteArray(text.getBytes(StandardCharsets.UTF_8));
     }
 }
