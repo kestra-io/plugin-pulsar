@@ -135,6 +135,53 @@ public class PulsarTest {
         assertThat(result.get(1).get("eventTime"), is(ZonedDateTime.parse("1998-01-23T06:00:00-05:00").toInstant()));
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    void readerResumesFromConsumedMessageId() throws Exception {
+        RunContext runContext = runContextFactory.of(ImmutableMap.of());
+        String topic = "tu_" + IdUtils.create();
+        URI uri = createInternalStorage();
+
+        Produce task = Produce.builder()
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .serializer(Property.ofValue(SerdeType.JSON))
+            .topic(Property.ofValue(topic))
+            .from(uri.toString())
+            .build();
+        task.run(runContext);
+
+        Consume consume = Consume.builder()
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .subscriptionName(Property.ofValue(IdUtils.create()))
+            .deserializer(Property.ofValue(SerdeType.JSON))
+            .topic(topic)
+            .build();
+        Consume.Output consumeOutput = consume.run(runContext);
+
+        BufferedInputStream consumeStream = new BufferedInputStream(storageInterface.get(TenantService.MAIN_TENANT, null, consumeOutput.getUri()), FileSerde.BUFFER_SIZE);
+        List<Map<String, Object>> consumed = new ArrayList<>();
+        FileSerde.read(consumeStream, r -> consumed.add((Map<String, Object>) r));
+
+        // same text as MessageId.toString(), which RealtimeTrigger outputs
+        Map<String, Object> id = (Map<String, Object>) consumed.get(9).get("messageId");
+        String messageId = "%s:%s:%s".formatted(id.get("ledgerId"), id.get("entryId"), id.get("partitionIndex"));
+
+        Reader reader = Reader.builder()
+            .uri(Property.ofValue("pulsar://localhost:26650"))
+            .deserializer(Property.ofValue(SerdeType.JSON))
+            .topic(topic)
+            .messageId(Property.ofValue(messageId))
+            .build();
+        Reader.Output readerOutput = reader.run(runContext);
+
+        BufferedInputStream inputStream = new BufferedInputStream(storageInterface.get(TenantService.MAIN_TENANT, null, readerOutput.getUri()), FileSerde.BUFFER_SIZE);
+        List<Map<String, Object>> result = new ArrayList<>();
+        FileSerde.read(inputStream, r -> result.add((Map<String, Object>) r));
+
+        assertThat(readerOutput.getMessagesCount(), is(40));
+        assertThat(((Map<String, Object>) result.getFirst().get("value")).get("username"), is("Kestra-10"));
+    }
+
     @Test
     void jsonMap() throws Exception {
         RunContext runContext = runContextFactory.of(ImmutableMap.of());

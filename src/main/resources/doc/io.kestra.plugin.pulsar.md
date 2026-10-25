@@ -12,7 +12,7 @@ Set `uri` to your Pulsar service URL (`pulsar://` for plain, `pulsar+ssl://` for
 
 `Consume` reads from one or more topics using a named `subscriptionName`. Set `initialPosition` (`Earliest` or `Latest`) and `subscriptionType` (`Exclusive`, `Shared`, or `Failover`). Bound the batch with `maxRecords` or `maxDuration`. Set `deserializer` to match the producer's serializer.
 
-`Reader` provides non-durable, non-subscription access to a topic — useful for replaying messages without affecting consumer group offsets. Use `since` to start from a relative time offset or `messageId` to start from a specific message.
+`Reader` provides non-durable, non-subscription access to a topic — useful for replaying messages without affecting consumer group offsets. Use `since` to start from a relative time offset or `messageId` to start from a specific message. `messageId` accepts `ledger:entry[:partition[:batchIndex]]`, `earliest` or `latest`.
 
 Enable schema validation with `schemaType` (`AVRO` or `JSON`) and provide the schema definition in `schemaString`.
 

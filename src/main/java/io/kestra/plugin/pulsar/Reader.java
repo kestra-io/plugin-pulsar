@@ -1,6 +1,5 @@
 package io.kestra.plugin.pulsar;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +8,8 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.impl.BatchMessageIdImpl;
+import org.apache.pulsar.client.impl.MessageIdImpl;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -52,6 +53,8 @@ import io.kestra.core.models.annotations.PluginProperty;
     }
 )
 public class Reader extends AbstractReader {
+    private static final String INVALID_MESSAGE_ID = "Invalid messageId '%s', expected 'ledger:entry[:partition[:batchIndex]]', 'earliest' or 'latest'";
+
     @Schema(
         title = "Rollback duration for start position",
         description = "Finds the latest message published before the given duration (e.g., `PT5M` starts 5 minutes in the past)."
@@ -61,7 +64,7 @@ public class Reader extends AbstractReader {
 
     @Schema(
         title = "Start from specific message ID",
-        description = "Reads from the message immediately after the provided ID. If neither `since` nor `messageId` is set, starts at earliest."
+        description = "Reads from the message immediately after the provided ID. Accepts `ledger:entry[:partition[:batchIndex]]`, `earliest` or `latest`. If neither `since` nor `messageId` is set, starts at earliest."
     )
     @PluginProperty(group = "advanced")
     private Property<String> messageId;
@@ -76,7 +79,9 @@ public class Reader extends AbstractReader {
             if (duration.isPresent()) {
                 readerBuilder.startMessageFromRollbackDuration(duration.get().getNano(), TimeUnit.NANOSECONDS);
             } else if (this.messageId != null) {
-                readerBuilder.startMessageId(MessageId.fromByteArray(runContext.render(this.messageId).as(String.class).orElseThrow().getBytes(StandardCharsets.UTF_8)));
+                var rMessageId = runContext.render(this.messageId).as(String.class)
+                    .orElseThrow(() -> new IllegalArgumentException("Property 'messageId' rendered to an empty value"));
+                readerBuilder.startMessageId(parseMessageId(rMessageId));
             } else {
                 readerBuilder.startMessageId(MessageId.earliest);
             }
@@ -112,6 +117,33 @@ public class Reader extends AbstractReader {
                     this.untrackCloseable();
                 }
             }
+        }
+    }
+
+    static MessageId parseMessageId(String messageId) {
+        var value = messageId.trim();
+        if ("earliest".equalsIgnoreCase(value)) {
+            return MessageId.earliest;
+        }
+        if ("latest".equalsIgnoreCase(value)) {
+            return MessageId.latest;
+        }
+
+        var parts = value.split(":", -1);
+        if (parts.length < 2 || parts.length > 4) {
+            throw new IllegalArgumentException(INVALID_MESSAGE_ID.formatted(value));
+        }
+
+        try {
+            var ledgerId = Long.parseLong(parts[0]);
+            var entryId = Long.parseLong(parts[1]);
+            var partitionIndex = parts.length > 2 ? Integer.parseInt(parts[2]) : -1;
+            if (parts.length == 4) {
+                return new BatchMessageIdImpl(ledgerId, entryId, partitionIndex, Integer.parseInt(parts[3]));
+            }
+            return new MessageIdImpl(ledgerId, entryId, partitionIndex);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(INVALID_MESSAGE_ID.formatted(value), e);
         }
     }
 }
