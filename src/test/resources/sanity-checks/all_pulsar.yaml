@@ -13,7 +13,12 @@ tasks:
 
   - id: docker_start
     type: io.kestra.plugin.docker.Run
-    containerImage: apachepulsar/pulsar
+    containerImage: apachepulsar/pulsar:5.0.1
+    env:
+      PULSAR_MEM: "-Xms256m -Xmx512m -XX:MaxDirectMemorySize=256m"
+      PULSAR_GC: "-XX:+UseG1GC"
+    memory:
+      memory: 1536MB
     entryPoint:
       - /pulsar/bin/pulsar
     commands:
@@ -24,8 +29,12 @@ tasks:
     wait: false
 
   - id: wait_pulsar
-    type: io.kestra.plugin.core.flow.Sleep
-    duration: PT10S
+    type: io.kestra.plugin.core.http.Request
+    uri: "http://localhost:{{ outputs.init.values.admin_port }}/admin/v2/namespaces/public/default"
+    retry:
+      type: constant
+      interval: PT3S
+      maxAttempts: 40
 
   - id: produce
     type: io.kestra.plugin.pulsar.Produce
