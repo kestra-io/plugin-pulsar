@@ -59,6 +59,8 @@ dependencies {
     // libs included in the final jar
     api (group: 'org.apache.pulsar', name: 'pulsar-client', version: '4.2.4') {
         exclude group: 'com.fasterxml.jackson.core'
+        // jar-in-jar bundling its own BouncyCastle copies; the flat bcprov/bcpkix/bcutil managed by the Kestra platform are used instead
+        exclude group: 'org.apache.pulsar', module: 'bouncy-castle-bc'
     }
 }
 
@@ -87,6 +89,7 @@ dependencies {
 
     testImplementation(group: 'org.apache.pulsar', name: 'pulsar-client-admin', version: '4.2.4') {
         exclude group: 'com.fasterxml.jackson.core'
+        exclude group: 'org.apache.pulsar', module: 'bouncy-castle-bc'
     }
 
     // test deps needed only for to have a runner
