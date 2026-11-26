@@ -42,7 +42,10 @@ public interface SubscriptionInterface {
 
     @io.swagger.v3.oas.annotations.media.Schema(
         title = "Private decryption key",
-        description = "PEM-encoded private key, inline or as a data: or file: URL, used to decrypt encrypted message payloads."
+        description = """
+            PEM-encoded private key, inline or as a data: or file: URL, used to decrypt encrypted message payloads.
+            For a data URL, use the form `data:application/x-pem-file;base64,...`.
+            """
     )
     Property<String> getEncryptionKey();
 

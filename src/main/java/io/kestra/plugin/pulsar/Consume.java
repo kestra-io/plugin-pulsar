@@ -149,7 +149,10 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
         }
 
         if (this.encryptionKey != null) {
-            consumerBuilder.defaultCryptoKeyReader(EncryptionKey.url(runContext.render(this.encryptionKey).as(String.class).orElseThrow()));
+            var rEncryptionKey = runContext.render(this.encryptionKey).as(String.class)
+                .filter(key -> !key.isBlank())
+                .orElseThrow(() -> new IllegalArgumentException("encryptionKey rendered empty: set a PEM private key, or a data: or file: URL"));
+            consumerBuilder.defaultCryptoKeyReader(EncryptionKey.url(rEncryptionKey));
         }
         return consumerBuilder;
     }

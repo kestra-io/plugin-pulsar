@@ -17,3 +17,7 @@ Set `uri` to your Pulsar service URL (`pulsar://` for plain, `pulsar+ssl://` for
 Enable schema validation with `schemaType` (`AVRO` or `JSON`) and provide the schema definition in `schemaString`.
 
 `Trigger` polls on a schedule (default 60 seconds) and starts one execution per batch. `RealtimeTrigger` starts one execution per message. Use `Trigger` for scheduled batch processing and `RealtimeTrigger` for per-message workflows.
+
+## Message encryption
+
+Set `encryptionKey` to a public key on `Produce` and its matching private key on `Consume`, `Trigger`, or `RealtimeTrigger`. Keys can be inline PEM, `data:application/x-pem-file;base64,...` URLs, or `file:` URLs accessible on the worker. Store private keys in secrets. The producer uses the fixed encryption key name `kestra`; non-Kestra consumers with a named key reader must resolve that name to the matching private key. An invalid public key fails production rather than publishing plaintext.

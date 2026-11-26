@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.FileSerde;
@@ -163,6 +164,63 @@ class EncryptionTest {
             assertNotNull(message);
             assertTrue(message.getEncryptionCtx().isEmpty());
             assertEquals("plain", new String(message.getData(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    void privateKeysAreSecretProperties() throws Exception {
+        for (var type : new Class<?>[] { Consume.class, Trigger.class, RealtimeTrigger.class }) {
+            var property = type.getDeclaredField("encryptionKey").getAnnotation(PluginProperty.class);
+            assertNotNull(property, type.getSimpleName());
+            assertTrue(property.secret(), type.getSimpleName());
+        }
+    }
+
+    @Test
+    void privateKeysAreExcludedFromToString() {
+        var key = Property.ofValue("private-key-must-not-be-logged");
+        assertFalse(Consume.builder().encryptionKey(key).build().toString().contains("private-key-must-not-be-logged"));
+        assertFalse(Trigger.builder().encryptionKey(key).build().toString().contains("private-key-must-not-be-logged"));
+        assertFalse(RealtimeTrigger.builder().encryptionKey(key).build().toString().contains("private-key-must-not-be-logged"));
+    }
+
+    @Test
+    void emptyPrivateKeyExplainsWhichPropertyFailed() throws Exception {
+        var runContext = runContextFactory.of(Map.of());
+        var consume = Consume.builder()
+            .topic("empty_key")
+            .subscriptionName(Property.ofValue("empty_key"))
+            .encryptionKey(Property.ofValue(null))
+            .build();
+        try (var client = PulsarClient.builder().serviceUrl("pulsar://localhost:26650").build()) {
+            var error = assertThrows(IllegalArgumentException.class, () -> consume.newConsumerBuilder(runContext, client));
+            assertEquals("encryptionKey rendered empty: set a PEM private key, or a data: or file: URL", error.getMessage());
+        }
+    }
+
+    @Test
+    void blankPrivateKeyExplainsWhichPropertyFailed() throws Exception {
+        var runContext = runContextFactory.of(Map.of());
+        for (var key : new String[] { "", "  \n" }) {
+            var consume = Consume.builder().topic("empty_key")
+                .subscriptionName(Property.ofValue("empty_key"))
+                .encryptionKey(Property.ofValue(key)).build();
+            try (var client = PulsarClient.builder().serviceUrl("pulsar://localhost:26650").build()) {
+                var error = assertThrows(IllegalArgumentException.class, () -> consume.newConsumerBuilder(runContext, client));
+                assertTrue(error.getMessage().startsWith("encryptionKey rendered empty:"));
+            }
+        }
+    }
+
+    @Test
+    void emptyPublicKeyFailsInsteadOfPublishingPlaintext() {
+        var runContext = runContextFactory.of(Map.of());
+        for (var key : new String[] { null, "", "  \n" }) {
+            var produce = Produce.builder().id(IdUtils.create()).type(Produce.class.getName())
+                .uri(Property.ofValue("pulsar://localhost:26650")).topic(Property.ofValue("empty_key"))
+                .encryptionKey(Property.ofValue(key)).from(Map.of("value", "confidential")).build();
+            var error = assertThrows(IllegalArgumentException.class, () -> produce.run(runContext));
+            assertEquals("encryptionKey rendered empty: set a PEM public key, or a data: or file: URL", error.getMessage());
         }
     }
 
