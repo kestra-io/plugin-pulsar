@@ -8,6 +8,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Data;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
@@ -19,7 +20,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -123,7 +123,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
 
     @Schema(
         title = "Public encryption key",
-        description = "PEM-encoded key used to encrypt the data key for message payload encryption."
+        description = "PEM-encoded public key, inline or as a data: or file: URL, used to encrypt the data key for message payload encryption."
     )
     @PluginProperty(group = "connection")
     private Property<String> encryptionKey;

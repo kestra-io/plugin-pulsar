@@ -12,6 +12,7 @@ import org.apache.pulsar.client.api.*;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
@@ -22,7 +23,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -67,7 +67,8 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
     @PluginProperty(group = "advanced")
     private Property<Map<String, String>> consumerProperties;
 
-    @PluginProperty(group = "connection")
+    @PluginProperty(group = "connection", secret = true)
+    @ToString.Exclude
     private Property<String> encryptionKey;
 
     @PluginProperty(group = "advanced")
@@ -148,7 +149,7 @@ public class Consume extends AbstractReader implements RunnableTask<AbstractRead
         }
 
         if (this.encryptionKey != null) {
-            consumerBuilder.defaultCryptoKeyReader(runContext.render(this.encryptionKey).as(String.class).orElseThrow());
+            consumerBuilder.defaultCryptoKeyReader(EncryptionKey.url(runContext.render(this.encryptionKey).as(String.class).orElseThrow()));
         }
         return consumerBuilder;
     }

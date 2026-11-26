@@ -77,7 +77,9 @@ public abstract class AbstractProducer<T> {
         }
 
         if (encryptionKey != null) {
-            this.producerBuilder.addEncryptionKey(this.runContext.render(encryptionKey));
+            this.producerBuilder
+                .defaultCryptoKeyReader(EncryptionKey.url(this.runContext.render(encryptionKey)))
+                .addEncryptionKey("kestra");
         }
 
         if (compressionType != null) {
@@ -178,7 +180,7 @@ public abstract class AbstractProducer<T> {
     }
 
     private Long processTimestamp(Object timestamp) {
-        if (timestamp instanceof Number number){
+        if (timestamp instanceof Number number) {
             return number.longValue();
         }
 
