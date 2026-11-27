@@ -8,6 +8,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Data;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
@@ -19,7 +20,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -123,7 +123,10 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
 
     @Schema(
         title = "Public encryption key",
-        description = "PEM-encoded key used to encrypt the data key for message payload encryption."
+        description = """
+            PEM-encoded public key, inline or as a data: or file: URL, used to encrypt the data key for message payload encryption.
+            For a data URL, use the form `data:application/x-pem-file;base64,...`.
+            """
     )
     @PluginProperty(group = "connection")
     private Property<String> encryptionKey;
@@ -137,6 +140,10 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
 
     @Override
     public Output run(RunContext runContext) throws Exception {
+        var rEncryptionKey = this.encryptionKey == null ? null
+            : runContext.render(this.encryptionKey).as(String.class)
+                .filter(key -> !key.isBlank())
+                .orElseThrow(() -> new IllegalArgumentException("encryptionKey rendered empty: set a PEM public key, or a data: or file: URL"));
         try (PulsarClient client = PulsarService.client(this, runContext)) {
             AbstractProducer<?> producer = switch (runContext.render(this.schemaType).as(SchemaType.class).orElseThrow()) {
                 case AVRO, JSON -> new GenericRecordProducer(
@@ -153,7 +160,7 @@ public class Produce extends AbstractPulsarConnection implements RunnableTask<Pr
                 runContext.render(this.topic).as(String.class).orElseThrow(),
                 runContext.render(this.producerName).as(String.class).orElse(null),
                 runContext.render(this.accessMode).as(ProducerAccessMode.class).orElse(null),
-                runContext.render(this.encryptionKey).as(String.class).orElse(null),
+                rEncryptionKey,
                 runContext.render(this.compressionType).as(CompressionType.class).orElse(null),
                 runContext.render(this.producerProperties).asMap(String.class, String.class)
             );

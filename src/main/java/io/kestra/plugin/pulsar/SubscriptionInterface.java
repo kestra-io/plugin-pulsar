@@ -5,11 +5,11 @@ import java.util.Map;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.SubscriptionType;
 
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import io.kestra.core.models.annotations.PluginProperty;
 
 public interface SubscriptionInterface {
     @Schema(
@@ -41,8 +41,11 @@ public interface SubscriptionInterface {
     Property<Map<String, String>> getConsumerProperties();
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Public encryption key",
-        description = "Key used for payload encryption/decryption when the topic is secured."
+        title = "Private decryption key",
+        description = """
+            PEM-encoded private key, inline or as a data: or file: URL, used to decrypt encrypted message payloads.
+            For a data URL, use the form `data:application/x-pem-file;base64,...`.
+            """
     )
     Property<String> getEncryptionKey();
 
